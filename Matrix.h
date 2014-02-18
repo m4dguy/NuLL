@@ -14,19 +14,59 @@
 template <typename T> class Matrix
 {
     public:
-        virtual T& get(uint x, uint y) = 0;
-        virtual const T& get(uint x, uint y) const = 0;
-        virtual void resize(size_t width, size_t height) = 0;
-        inline void set(uint x, uint y, T& val){(*this)(x,y) = val;};
-        inline size_t width() const {return _width;};
-        inline size_t height() const {return _height;};
+        Matrix(size_t dimension)
+        {
+            this->_width = this->_height = dimension;
 
-		void fill(T val = 0)
-		{
-			for(uint y=0; y<_height; ++y)
-				for(uint x=0; x<_width; ++x)
-					get(x,y) = val;
-		};
+            this->_power = 1;
+            uint trueSize = 1;
+            while((trueSize<<=1) < dimension)
+                ++(this->_power);
+
+            this->_memory = trueSize * this->_height * sizeof(T);
+            this->_entries = (T*) calloc(trueSize * this->_height, sizeof(T));
+        };
+
+
+        Matrix(size_t width, size_t height)
+        {
+            this->_width = width;
+            this->_height = height;
+
+            this->_power = 1;
+			uint trueSize = 1;
+			while((trueSize<<=1) < width)
+                ++(this->_power);
+
+            this->_memory = trueSize * this->_height * sizeof(T);
+            this->_entries = (T*) calloc(trueSize * this->_height, sizeof(T));
+        };
+
+        Matrix(const Matrix& other)
+        {
+            this->_width = other._width;
+            this->_height = other._height;
+			this->_memory = other._memory;
+			this->_power = other._power;
+
+            this->_entries = (T*) malloc(this->_memory);
+            memcpy(this->_entries, other._entries, other._memory);
+        };
+
+        virtual ~Matrix()
+        {
+            free(this->_entries);
+        };
+
+        virtual T& get(uint x, uint y)
+        {
+            return this->_entries[(y<<this->_power)|x];
+        };
+
+        virtual const T& get(uint x, uint y) const
+        {
+            return this->_entries[(y<<this->_power)|x];
+        };
 
         const T& getMirrored(int x, int y) const
         {
@@ -49,10 +89,63 @@ template <typename T> class Matrix
             y = (y>=h)? (h - (y - h + 1)) : y;
 
             return get(x,y);
+        };
+
+        inline void set(uint x, uint y, T& val)
+        {
+            (*this)(x,y) = val;
+        };
+
+        inline size_t width() const
+        {
+            return _width;
+        };
+
+        inline size_t height() const
+        {
+            return _height;
+        };
+
+		void fill(T val = 0)
+		{
+			for(uint y=0; y<_height; ++y)
+				for(uint x=0; x<_width; ++x)
+					get(x,y) = val;
+		};
+
+        virtual void resize(size_t width, size_t height)
+        {
+            this->_width = width;
+            this->_height = height;
+            this->_memory = width * height * sizeof(T);
+
+            this->_power = 1;
+            uint counter=1;
+            while((counter<<1) < width)
+                ++(this->_power);
+
+            this->_entries = (T*) realloc(this->_entries, this->_memory);
+        };
+
+        inline T sum()
+        {
+            T res = 0;
+            for(uint x=0; x<this->_width; ++x)
+                for(uint y=0; y<this->_height; ++y)
+                    res += this->get(x,y);
+
+            return res;
         }
 
-        inline T& operator()(uint x, uint y) {return get(x,y);}
-        inline const T& operator()(uint x, uint y) const {return get(x,y);}
+        inline T& operator()(uint x, uint y)
+        {
+            return get(x,y);
+        }
+
+        inline const T& operator()(uint x, uint y) const
+        {
+            return get(x,y);
+        };
 
         const Matrix& operator=(const Matrix<T>& other)
         {
@@ -79,7 +172,7 @@ template <typename T> class Matrix
                     this->get(x,y) += A(x,y);
 
             return *this;
-        }
+        };
 
         Matrix<T>& operator-=(const Matrix<T>& A)
         {
@@ -88,7 +181,29 @@ template <typename T> class Matrix
                     this->get(x,y) -= A(x,y);
 
             return *this;
-        }
+        };
+
+        Matrix<T> operator*(const Matrix<T>& mtx)
+        {
+            T entry;
+            size_t width = mtx.width();
+            size_t height = mtx.height();
+            Matrix<T> res(width, height);
+
+            for(uint j=0; j<height; ++j)
+            {
+                for(uint i=0; i<width; ++i)
+                {
+                    entry = 0;
+                    for(uint k=0; k<height; ++k)
+                    {
+                        entry += this->get(k,i) * mtx(j,k);
+                    }
+                    res(j,i) = entry;
+                }
+            }
+            return res;
+        };
 
         Vector<T> operator*(const Vector<T>& vec)
         {
@@ -106,7 +221,7 @@ template <typename T> class Matrix
             }
 
             return res;
-        }
+        };
 
         Matrix<T>& operator*=(T scalar)
         {
@@ -141,7 +256,7 @@ template <typename T> class Matrix
                 }
             }
             return *this;
-        }
+        };
 
         Matrix<T>& operator/=(T scalar)
         {
@@ -194,6 +309,7 @@ template <typename T> class Matrix
         };
 
     protected:
+        uint _power;
         size_t _width;          //matrix dimensions
         size_t _height;
 
@@ -202,5 +318,8 @@ template <typename T> class Matrix
 
     private:
 };
+
+typedef Matrix<double> MatrixD;
+typedef Matrix<float> MatrixF;
 
 #endif // MATRIX_H

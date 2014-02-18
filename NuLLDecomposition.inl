@@ -60,7 +60,7 @@ template <typename T> void NuLLDecomposition::choleskyDecomposition(const Matrix
 template <typename T> void NuLLDecomposition::LUDecomposition(const Matrix<T>& mtx, Matrix<T>& dstL, Matrix<T>& dstU)
 {
     size_t dim = mtx.width();
-    PowerMatrix<T> tmp(dim, dim);
+    Matrix<T> tmp(dim, dim);
     NuLLTools::copyMatrix(mtx, tmp);
 
     for(uint y=1; y<dim; ++y)
@@ -94,7 +94,6 @@ template <typename T> void NuLLDecomposition::LUDecomposition(const Matrix<T>& m
 }
 
 //optimize: avoid binary operators!
-//internally, PowerMatrices are used to speed up calculations
 //return orthogonal basis Q and upper triangular matrix R
 //useful for QR algorithm (eigenvalue calculation)
 template <typename T> void NuLLDecomposition::QRDecomposition(const Matrix<T>& mtx, Matrix<T>& dstQ, Matrix<T>& dstR)
@@ -106,11 +105,11 @@ template <typename T> void NuLLDecomposition::QRDecomposition(const Matrix<T>& m
 
 	Vector<T> h(dim);
 
-	PowerMatrix<T> Q(dim);				//Q
-	PowerMatrix<T> R(dim);				//R
-    PowerMatrix<T> I(dim);				//unit matrix
-    PowerMatrix<T> Hk(dim);				//householder matrix H of step k
-    PowerMatrix<T> hh(dim);				//dyadic product of h
+	Matrix<T> Q(dim);		        	//Q
+	Matrix<T> R(dim);       			//R
+    Matrix<T> I(dim);		        	//unit matrix
+    Matrix<T> Hk(dim);      			//householder matrix H of step k
+    Matrix<T> hh(dim);			        //dyadic product of h
     NuLLTools::copyMatrix(mtx, R);
 
     //build unit matrix, initialize orthogonal matrix

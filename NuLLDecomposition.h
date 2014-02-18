@@ -9,7 +9,6 @@
 
 #include "Vector.h"
 #include "Matrix.h"
-#include "PowerMatrix.h"
 
 /*
  * different matrix decomposition methods

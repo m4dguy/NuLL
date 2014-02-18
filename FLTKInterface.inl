@@ -1,15 +1,5 @@
 #include "FLTKInterface.h"
 
-//unchecked; probably troublesome/ error in implementation
-/*void FLTKInterface::imageToPixelbuffer(const Fl_Image& src, uchar* dst)
-{
-	const size_t count = src.w() * src.h() * src.d();
-	const char* data = src.data()[0];
-	//std::memcpy(dst, data, sizeof(uchar));
-	for(uint i=0; i<count; ++i)
-		dst[i] = (uchar)data[i]; 
-}*/
-
 //assume buffer depth = 3
 //fix for case of depth = 1
 //assuming pixel buffer (called dst) exists
@@ -29,6 +19,29 @@ template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& sr
 			dst[index] = (uchar) src(x,y);
 			dst[index+1] = (uchar) src(x,y);
 			dst[index+2] = (uchar) src(x,y);
+		}
+	}
+}
+
+//assume buffer depth = 3
+//fix for case of depth = 1
+//assuming pixel buffer (called dst) exists
+template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& srcR, const Matrix<T>& srcG, const Matrix<T>& srcB, uchar* dst)
+{
+	//assume depth = 3
+	uint index;				//buffer index
+	const uint depth = 3;
+	size_t height = srcR.height();
+	size_t width = srcR.width();
+
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+			index = (y * width * depth) + (x * depth);
+			dst[index] = (uchar) srcR(x,y);
+			dst[index+1] = (uchar) srcG(x,y);
+			dst[index+2] = (uchar) srcB(x,y);
 		}
 	}
 }

@@ -86,7 +86,7 @@ template <typename T> void NuLLProcessing::pillboxKernel(Matrix<T>& dst, int rad
 template <typename T> void NuLLProcessing::gaussianKernel(Matrix<T>& dst, int radius, double sigma)
 {
     const uint dim = (2 * radius) + 1;
-	const double pi = 3.1415926535897932384626433832795028841971693993751058;
+	const double pi = 2.0 * asinf(1.0);
 
     T div = 2 * pi * sigma * sigma;
     T kx, ky, res, scale;
@@ -115,7 +115,7 @@ template <typename T> void NuLLProcessing::gaussianKernel(Matrix<T>& dst, int ra
 //smoothing with pillbox kernel
 template <typename T> void NuLLProcessing::pillboxBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-    PowerMatrix<T> kernel((2 * radius) + 1);
+    Matrix<T> kernel((2 * radius) + 1);
     pillboxKernel(kernel, radius);
     convolve(mtx, dst, kernel);
 }
@@ -124,7 +124,7 @@ template <typename T> void NuLLProcessing::pillboxBlur(const Matrix<T>& mtx, Mat
 //update me: use separation theorem for fast gaussian convolution!
 template <typename T> void NuLLProcessing::gaussianBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius, double sigma)
 {
-    PowerMatrix<T> kernel(radius+radius+1);
+    Matrix<T> kernel(radius+radius+1);
     gaussianKernel(kernel, radius, sigma);
     convolve(mtx, dst, kernel);
 }
@@ -346,7 +346,7 @@ template <typename T> void NuLLProcessing::erosion(const Matrix<T>& mtx, Matrix<
 //opening for matrices
 template <typename T> void NuLLProcessing::opening(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-    PowerMatrix<T> tmp(mtx.width(), mtx.height());
+    Matrix<T> tmp(mtx.width(), mtx.height());
     erosion(mtx, tmp, radius);
     dilation(tmp, dst, radius);
 }
@@ -354,7 +354,7 @@ template <typename T> void NuLLProcessing::opening(const Matrix<T>& mtx, Matrix<
 //closing for matrices
 template <typename T> void NuLLProcessing::closing(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-    PowerMatrix<T> tmp(mtx.width(), mtx.height());
+    Matrix<T> tmp(mtx.width(), mtx.height());
     dilation(mtx, tmp, radius);
     erosion(tmp, dst, radius);
 }
@@ -362,7 +362,7 @@ template <typename T> void NuLLProcessing::closing(const Matrix<T>& mtx, Matrix<
 //white tophat operation for matrices
 template <typename T> void NuLLProcessing::whiteTopHat(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-	PowerMatrix<T> tmp(mtx.width(), mtx.height());
+	Matrix<T> tmp(mtx.width(), mtx.height());
     opening(mtx, tmp, radius);
     dst = mtx;
 	dst -= tmp;
@@ -371,14 +371,14 @@ template <typename T> void NuLLProcessing::whiteTopHat(const Matrix<T>& mtx, Mat
 //black tophat operation for matrices
 template <typename T> void NuLLProcessing::blackTopHat(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-	PowerMatrix<T> tmp(mtx.width(), mtx.height());
+	Matrix<T> tmp(mtx.width(), mtx.height());
 	closing(mtx, dst, radius);
 	dst -= mtx;
 }
 
 template <typename T> void NuLLProcessing::selfdualTopHat(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-	PowerMatrix<T> tmp(mtx.width(), mtx.height());
+	Matrix<T> tmp(mtx.width(), mtx.height());
 	blackTopHat(mtx, dst, radius);
 	whiteTopHat(mtx, tmp, radius);
 	dst += tmp;
@@ -413,10 +413,10 @@ template <typename T> void NuLLProcessing::doubleThreshold(const Matrix<T>& mtx,
 template <typename T> void NuLLProcessing::automatedThreshold(const Matrix<T>& mtx, Matrix<T>& dst, double gmin, double gmax)
 {
 	double threshold = 0;
-	
-	double curVar = 0; 
-	double bestVar = 0; 
-	
+
+	double curVar = 0;
+	double bestVar = 0;
+
 	double cumulMean = 0;
 	double totalMean = 0;
 
@@ -438,7 +438,7 @@ template <typename T> void NuLLProcessing::automatedThreshold(const Matrix<T>& m
 	{
 		cumulProb += prob[(uint)t];
 		cumulMean += (t+1) * prob[(int)t];
-		
+
 		curVar = totalMean * cumulProb - cumulMean;
 		curVar *= totalMean * cumulProb - cumulMean;
 		curVar /= cumulProb * (1 - cumulProb);
@@ -450,7 +450,7 @@ template <typename T> void NuLLProcessing::automatedThreshold(const Matrix<T>& m
 			threshold = t;
 		}
 	}
-	
+
 	NuLLProcessing::threshold(mtx, dst, threshold, gmin, gmax);
 }
 

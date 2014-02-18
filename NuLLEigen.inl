@@ -25,16 +25,16 @@ template<typename T> inline void NuLLEigen::powerIteration(const Matrix<T>& mtx,
 //calculates all eigenvalues of a matrix
 //uses QR decomposition and stores final eigenvalues in vector
 //computationally expensive; do not use, if only the largest eigenvalue is needed!
-template<typename T> inline void NuLLEigen::QRAlgorithm(const Matrix<T>& A, RectMatrix<T>& dstVecs, Vector<T>& dstVals, T threshold = 0.00001)
+template<typename T> inline void NuLLEigen::QRAlgorithm(const Matrix<T>& A, Matrix<T>& dstVecs, Vector<T>& dstVals, T threshold = 0.00001)
 {
     size_t dim = A.height();
 
     T norm, normOld, diff;
     norm = normOld = diff = 0;
 
-    RectMatrix<T> Ai(dim, dim);
-    RectMatrix<T> Q(dim, dim);
-    RectMatrix<T> R(dim, dim);
+    Matrix<T> Ai(dim, dim);
+    Matrix<T> Q(dim, dim);
+    Matrix<T> R(dim, dim);
     NuLLTools::copyMatrix(A, Ai);
 
     do

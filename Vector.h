@@ -14,8 +14,6 @@ template <typename T> class Vector
             _entries = (T*) calloc(dimension, dimension * sizeof(T));
         };
 
-        Vector(){*this(3);};
-
         Vector(const Vector& other)
         {
             _dimension = other._dimension;

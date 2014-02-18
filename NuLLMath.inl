@@ -4,7 +4,6 @@
 #include "NuLLMath.h"
 
 //transpose matrix
-//useless for symmatrix (doh!)
 template <typename T> void NuLLMath::transpose(const Matrix<T>& mtx, Matrix<T>& dst)
 {
     size_t width = mtx.width();
@@ -55,8 +54,8 @@ template <typename T> T NuLLMath::determinant(const Matrix<T>& mtx)
     //det(A) = det(L*U) = det(L) * det(U) = det(U) = prod(U(i,i))
     //multiply entries of U matrix only since diagonals of L matrix are one
     T res = 1;
-    PowerMatrix<T> L(dim);
-    PowerMatrix<T> U(dim);
+    Matrix<T> L(dim);
+    Matrix<T> U(dim);
     NuLLDecomposition::LUDecomposition(mtx, L, U);
 
     for(uint i=0; i<dim; ++i)
@@ -115,9 +114,25 @@ template<typename T> void NuLLMath::invert(const Matrix<T>& mtx, Matrix<T>& dst)
     }
 
     //LU inversion
-    PowerMatrix<T> L(mtx.width(), mtx.height());
-    PowerMatrix<T> U(mtx.width(), mtx.height());
-    //NuLLDecomposition::LUDecomposition(mtx, L, U);
+    Matrix<T> L(dim, dim);
+    Matrix<T> U(dim, dim);
+    NuLLDecomposition::LUDecomposition(mtx, L, U);
+
+    Vector<T> vec(dim);
+    Vector<T> colTmp(dim);
+    Vector<T> colRes(dim);
+    for(uint x=0; x<dim; ++x)
+    {
+        if(x>0)
+            vec[x-1] = 0;
+
+        vec[x] = 1;
+        NuLLSolve::forwardElimination(L, vec, colTmp);
+        NuLLSolve::backwardSubstitution(U, colTmp, colRes);
+
+        for(uint y=0; y<dim; ++y)
+            dst(x,y) = colRes[y];
+    }
 }
 
 //quick check if matrix is positive definite
@@ -138,7 +153,7 @@ template <typename T> bool NuLLMath::diagonallyDominant(const Matrix<T>& mtx)
 
             colSum += abs(mtx(x,y));
         }
-        std::cout << colSum << "/" << mtx(x,x) << std::endl;
+
         if(colSum >= abs(mtx(x,x)))
             return false;
     }
@@ -157,11 +172,12 @@ template <typename T> void NuLLMath::dyadicProduct(const Vector<T>& a, const Vec
 //faster than calling the naive function via dyadicProduct(a, a)
 template <typename T> void NuLLMath::dyadicProduct(const Vector<T>& a, Matrix<T>& dst)
 {
-    for(uint x=0; x<a.size(); ++x)
+    for(uint x=0; x<=a.size(); ++x)
         for(uint y=x; y<a.size(); ++y)
             dst(y,x) = dst(x,y) = a[x] * a[y];
 }
 
+//TODO: fix
 //kronecker product
 template <typename T> void NuLLMath::kroneckerProduct(const Matrix<T>& A, Matrix<T>& B, Matrix<T>& dst)
 {

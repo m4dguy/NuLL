@@ -2,10 +2,7 @@
 #define NULLSOLVE_H
 
 #include "Vector.h"
-#include "SymMatrix.h"
-#include "PowerMatrix.h"
 #include "NuLLDecomposition.inl"
-#include "NuLLMath.inl"
 #include "NuLLTools.inl"
 
 /*

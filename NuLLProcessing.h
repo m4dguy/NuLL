@@ -6,7 +6,6 @@
 #include <math.h>
 
 #include "Utils.h"
-#include "PowerMatrix.h"
 #include "NuLLTools.inl"
 
 /*

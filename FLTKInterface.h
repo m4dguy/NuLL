@@ -5,7 +5,6 @@
 
 #include "Utils.h"
 #include "Matrix.h"
-#include "RectMatrix.h"
 
 /*
  * implement shit
@@ -15,6 +14,8 @@ namespace FLTKInterface
 {
 	//void imageToPixelbuffer(const Fl_Image& src, uchar* dst);
 	template<typename T> void matrixToPixelbuffer(const Matrix<T>& src, uchar* dst);
+	template<typename T> void matrixToPixelbuffer(const Matrix<T>& srcR, const Matrix<T>& srcG, const Matrix<T>& srcB, uchar* dst);
+
 	template<typename T> void pixelbufferToMatrix(const uchar* src, Matrix<T>& dst);
 	template<typename T> void pixelbufferToMatrix(const uchar* src, Matrix<T>& dstR, Matrix<T>& dstG, Matrix<T>& dstB);
 

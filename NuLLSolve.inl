@@ -3,6 +3,11 @@
 
 #include "NuLLSolve.h"
 
+namespace NuLLMath
+{
+    template <typename T> T dotProduct(const Vector<T>& x, const Vector<T>& y);
+    template <typename T> T euclideanNorm(const Vector<T>& x);
+}
 
 //for solving linear systems of equations
 //use forward substitution with decomposed matrix first, then backwardsubstitution
@@ -60,7 +65,7 @@ template<typename T> void NuLLSolve::backwardSubstitution(const Matrix<T>& A, co
 template <typename T> void NuLLSolve::solveCholesky(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res)
 {
     Vector<T> tmp(A.height());
-    SymMatrix<T> chol(A.height());
+    Matrix<T> chol(A.height());
     NuLLDecomposition::choleskyDecomposition(A, chol);
     forwardElimination(chol, b, tmp);
     backwardSubstitution(chol, tmp, res);
@@ -73,8 +78,8 @@ template <typename T> void NuLLSolve::solveCholesky(const Matrix<T>& A, const Ve
 template <typename T> void NuLLSolve::solveLU(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res)
 {
     Vector<T> tmp(A.height());
-    SymMatrix<T> L(A.height());
-    SymMatrix<T> U(A.height());
+    Matrix<T> L(A.height());
+    Matrix<T> U(A.height());
     NuLLDecomposition::LUDecomposition(A, L, U);
     forwardElimination(L, b, tmp);
     backwardSubstitution(U, tmp, res);
@@ -87,7 +92,8 @@ template <typename T> void NuLLSolve::solveLU(const Matrix<T>& A, const Vector<T
 template <typename T> void NuLLSolve::conjugateGradient(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res)
 {
     size_t dim = A.height();
-    Vector<T> rk, Apk;
+    Vector<T> rk(dim);
+    Vector<T> Apk(dim);
     T alpha, beta, gamma, unscaledAlpha;
 
     Vector<T> rkN(dim);
@@ -171,8 +177,8 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T> A, const Vect
     uint dim = A.height();
     T len, lenOld, diff;
     Vector<T> vec(dim);
-    PowerMatrix<T> D(dim, dim);
-    PowerMatrix<T> R(dim, dim);
+    Matrix<T> D(dim, dim);
+    Matrix<T> R(dim, dim);
 
     NuLLTools::copyMatrix(A, R);
     for(uint i=0; i<dim; ++i)
@@ -184,6 +190,7 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T> A, const Vect
     do
     {
         lenOld = len;
+        //vec = R * vec;
         vec = D * (b - R * vec);
         len = NuLLMath::euclideanNorm(vec);
         diff = (len > lenOld)? (len - lenOld) : (lenOld - len);

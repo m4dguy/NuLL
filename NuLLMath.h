@@ -3,9 +3,9 @@
 
 #include "Utils.h"
 #include "NuLLDecomposition.inl"
+#include "NuLLSolve.inl"
 #include "Matrix.h"
 #include "Vector.h"
-#include "PowerMatrix.h"
 
 /*
  * various mathematical methods for vectors and matrices
@@ -16,7 +16,7 @@
 
 namespace NuLLMath
 {
-    const double pi = 3.1415926535897932384626433832795028841971693993751058;
+    const double pi = 2.0 * asinf(1.0);
     const double e  = 2.7182818284590452353602874713526624977572470936999595;
 
     template <typename T> void transpose(const Matrix<T>& mtx, Matrix<T>& dst);
