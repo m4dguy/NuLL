@@ -62,12 +62,9 @@ namespace NuLLProcessing
 	template <typename T> void affineRescale(const Matrix<T>& mtx, Matrix<T>& dst, double minVal = 0, double maxVal = 255);
 	template <typename T> void affineTransform(const Matrix<T>& mtx, Matrix<T>& dst, double a = 1, double b = 0);
 
-	//noise mask generators
-	//use for additive or multiplicative noise
-	//use of "snap" after addition/ multiplication recommended to conserve range [0,255]
-	template <typename T> void uniformNoiseMask(Matrix<T>& dst, T a, T b, double percentage = 0.5);
-	template <typename T> void gaussianNoiseMask(Matrix<T>& dst, double sigma, double my, double percentage = 0.5);
-	template <typename T> void impulseNoiseMask(Matrix<T>& dst, double percentage = 0.5);
+	//up- and downscaling
+	template <typename T> void downsample(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> void upsample(const Matrix<T>& mtx, Matrix<T>& dst);
 }
 
 #endif // NULLPROCESSING_H

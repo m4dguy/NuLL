@@ -1,14 +1,12 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <string.h>
-
 #include "Utils.h"
 #include "Vector.h"
 
 /*
- * matrix base class
- * needs overloaded get() for entries
+ * Matrix class
+ * Has number of pow2 entries for fast access
  */
 
 template <typename T> class Matrix
@@ -117,25 +115,15 @@ template <typename T> class Matrix
         {
             this->_width = width;
             this->_height = height;
-            this->_memory = width * height * sizeof(T);
 
             this->_power = 1;
-            uint counter=1;
-            while((counter<<1) < width)
+            uint trueSize=1;
+            while((trueSize<<=1) < width)
                 ++(this->_power);
 
-            this->_entries = (T*) realloc(this->_entries, this->_memory);
+			this->_memory = trueSize * height * sizeof(T);
+			this->_entries = (T*) calloc(trueSize * this->_height, sizeof(T));
         };
-
-        inline T sum()
-        {
-            T res = 0;
-            for(uint x=0; x<this->_width; ++x)
-                for(uint y=0; y<this->_height; ++y)
-                    res += this->get(x,y);
-
-            return res;
-        }
 
         inline T& operator()(uint x, uint y)
         {
@@ -145,7 +133,7 @@ template <typename T> class Matrix
         inline const T& operator()(uint x, uint y) const
         {
             return get(x,y);
-        };
+        }
 
         const Matrix& operator=(const Matrix<T>& other)
         {
@@ -172,7 +160,7 @@ template <typename T> class Matrix
                     this->get(x,y) += A(x,y);
 
             return *this;
-        };
+        }
 
         Matrix<T>& operator-=(const Matrix<T>& A)
         {
@@ -181,7 +169,7 @@ template <typename T> class Matrix
                     this->get(x,y) -= A(x,y);
 
             return *this;
-        };
+        }
 
         Matrix<T> operator*(const Matrix<T>& mtx)
         {
@@ -221,7 +209,7 @@ template <typename T> class Matrix
             }
 
             return res;
-        };
+        }
 
         Matrix<T>& operator*=(T scalar)
         {
@@ -256,7 +244,7 @@ template <typename T> class Matrix
                 }
             }
             return *this;
-        };
+        }
 
         Matrix<T>& operator/=(T scalar)
         {

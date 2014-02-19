@@ -252,7 +252,7 @@ template <typename T> void NuLLProcessing::medianFilter(const Matrix<T>& mtx, Ma
                 for(int kx=-radius; kx<=radius; ++kx)
                 {
                     //disc-shaped neighborhood
-                    if(kx*kx + ky*ky > radsq)
+                    if((kx*kx + ky*ky) > radsq)
                         continue;
 
                     neighbors.push_back(mtx.getMirrored(x+kx, y+ky));
@@ -508,22 +508,37 @@ template <typename T> void NuLLProcessing::affineTransform(const Matrix<T>& mtx,
 			dst(x,y) = a * mtx(x,y) + b;
 }
 
-//create noise mask with uniform noise
-template <typename T> void NuLLProcessing::uniformNoiseMask(Matrix<T>& dst, T a, T b, double percentage)
+template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matrix<T>& dst)
 {
+	const uint width = mtx.width() / 2;
+	const uint height = mtx.height() / 2;
+	dst.resize(width, height);
 
+	for(uint y=0; y<height; y++)
+	{
+		for(uint x=0; x<width; x++)
+		{
+			dst(x,y) = (mtx(2*x,2*y) + mtx(2*x+1,2*y) + mtx(2*x,2*y+1) + mtx(2*x+1,2*y+1)) / 4;
+		}
+	}
 }
 
-//create noise mask with gaussian noise
-template <typename T> void NuLLProcessing::gaussianNoiseMask(Matrix<T>& dst, double sigma, double my, double percentage)
+template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix<T>& dst)
 {
+	const uint width = mtx.width();
+	const uint height = mtx.height();
+	dst.resize(width*2, height*2);
 
-}
-
-//create noise mask with salt and pepper noise
-template <typename T> void NuLLProcessing::impulseNoiseMask(Matrix<T>& dst, double percentage)
-{
-
+	for(uint y=0; y<height; y++)
+	{
+		for(uint x=0; x<width; x++)
+		{
+			dst(2*x, 2*y) = mtx(x,y);
+			dst(2*x+1, 2*y) = mtx(x,y);
+			dst(2*x, 2*y+1) = mtx(x,y);
+			dst(2*x+1, 2*y+1) = mtx(x,y);
+		}
+	}
 }
 
 #endif
