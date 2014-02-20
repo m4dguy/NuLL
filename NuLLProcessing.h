@@ -5,7 +5,6 @@
 #include <vector>
 #include <math.h>
 
-#include "Utils.h"
 #include "NuLLTools.inl"
 
 /*
@@ -16,6 +15,7 @@
  *              derivative filters (first order, second order)
  *              kernel generators
  *              convolution
+ *				scaling
  *
  */
 
@@ -24,6 +24,7 @@ namespace NuLLProcessing
 	//kernel operations
     template <typename T> void normalize(Matrix<T>& mtx);
     template <typename T> void convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Matrix<T>& kernel);
+	template <typename T> void convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel);
 
 	//kernel generators
 	template <typename T> void identityKernel(Matrix<T>& dst, int radius = 1);
@@ -63,8 +64,10 @@ namespace NuLLProcessing
 	template <typename T> void affineTransform(const Matrix<T>& mtx, Matrix<T>& dst, double a = 1, double b = 0);
 
 	//up- and downscaling
-	template <typename T> void downsample(const Matrix<T>& mtx, Matrix<T>& dst);
-	template <typename T> void upsample(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> void downsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor=2);
+	template <typename T> void upsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor=2);
+
+	//template <typename T> void statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold=5.);
 }
 
 #endif // NULLPROCESSING_H

@@ -33,6 +33,48 @@ template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<
     }
 }
 
+//covolution with 1D kernel
+//faster than 2D convolution, with linear running time
+//valid alternative is kernel can be decomposed into a vector
+template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel)
+{
+	const uint width = mtx.width();
+	const uint height = mtx.height();
+
+	T val;
+	const uint kSize = kernel.size();
+	const uint offset = kSize / 2;
+	Matrix<T> tmp(width, height);
+
+	//convolution in x-direction
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+			val = 0.;
+			for(uint i=0; i<kSize; ++i)
+			{
+				val += kernel[i] * mtx.getMirrored(x+offset-i, y);
+			}
+			tmp(x,y) = val;
+		}
+	}
+
+	//convolution in y-direction
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+			val = 0;
+			for(uint i=0; i<kSize; ++i)
+			{
+				val += kernel[i] * tmp.getMirrored(x, y+offset-i);
+			}
+			dst(x,y) = val;
+		}
+	}
+}
+
 //normalizes matrix to make sum of entries equal 1
 //useful for kernel normalization
 template<typename T> void NuLLProcessing::normalize(Matrix<T>& mtx)
@@ -60,6 +102,7 @@ template <typename T> void NuLLProcessing::identityKernel(Matrix<T>& dst, int ra
 	dst(radius, radius) = 1.0;
 }
 
+//disc-shaped pillbox kernel
 template <typename T> void NuLLProcessing::pillboxKernel(Matrix<T>& dst, int radius)
 {
     const int dim = (2 * radius) + 1;
@@ -113,20 +156,39 @@ template <typename T> void NuLLProcessing::gaussianKernel(Matrix<T>& dst, int ra
 }
 
 //smoothing with pillbox kernel
+//uses separation theorem for fast convolution/ linear running time
 template <typename T> void NuLLProcessing::pillboxBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
-    Matrix<T> kernel((2 * radius) + 1);
-    pillboxKernel(kernel, radius);
-    convolve(mtx, dst, kernel);
+	uint kSize = (2 * radius) + 1;
+	Vector<T> kernel(kSize);
+	kernel.fill(1.);
+	kernel /= (T)kSize;
+	
+	convolve(mtx, dst, kernel);
 }
 
 //gaussian smoothing for matrices
-//update me: use separation theorem for fast gaussian convolution!
+//uses separation theorem for fast convolution/ linear running time
 template <typename T> void NuLLProcessing::gaussianBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius, double sigma)
 {
-    Matrix<T> kernel(radius+radius+1);
-    gaussianKernel(kernel, radius, sigma);
-    convolve(mtx, dst, kernel);
+	const int kSize = (2 * radius) + 1;
+	const double pi = 2.0 * asinf(1.0);
+	T divExp = 2 * sigma * sigma;
+	T div = sqrt(2 * pi) * sigma;
+    T res, scale;
+    scale = 0;
+
+	Vector<T> kernel(kSize);
+	for(int i=0; i<kSize; ++i)
+	{
+		res = exp(- ((i-radius)*(i-radius)) / divExp);
+		res /= div;
+		kernel[i] = res;
+		scale += res;
+	}
+	kernel /= (T)scale;
+	
+	convolve(mtx, dst, kernel);
 }
 
 //first order derivative (central differential quotient) for matrices
@@ -508,37 +570,71 @@ template <typename T> void NuLLProcessing::affineTransform(const Matrix<T>& mtx,
 			dst(x,y) = a * mtx(x,y) + b;
 }
 
-template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matrix<T>& dst)
+//downsampling of image
+//low-pass filtering before use is recommended
+template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor)
 {
-	const uint width = mtx.width() / 2;
-	const uint height = mtx.height() / 2;
+	T val;
+	const uint width = mtx.width() / factor;
+	const uint height = mtx.height() / factor;
+	const uint scale = factor * factor;
 	dst.resize(width, height);
 
 	for(uint y=0; y<height; y++)
 	{
 		for(uint x=0; x<width; x++)
 		{
-			dst(x,y) = (mtx(2*x,2*y) + mtx(2*x+1,2*y) + mtx(2*x,2*y+1) + mtx(2*x+1,2*y+1)) / 4;
+			val = 0;
+			for(uint fy=0; fy<factor; ++fy)
+			{
+				for(uint fx=0; fx<factor; ++fx)
+				{
+					val += mtx(factor*x + fx, factor*y + fy);
+				}
+			}
+			dst(x,y) = val / (T)scale;
 		}
 	}
 }
 
-template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix<T>& dst)
+//upscaling of image
+template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor)
 {
 	const uint width = mtx.width();
 	const uint height = mtx.height();
-	dst.resize(width*2, height*2);
+	dst.resize(width*factor, height*factor);
 
 	for(uint y=0; y<height; y++)
 	{
 		for(uint x=0; x<width; x++)
 		{
-			dst(2*x, 2*y) = mtx(x,y);
-			dst(2*x+1, 2*y) = mtx(x,y);
-			dst(2*x, 2*y+1) = mtx(x,y);
-			dst(2*x+1, 2*y+1) = mtx(x,y);
+			for(uint fy=0; fy<factor; ++fy)
+			{
+				for(uint fx=0; fx<factor; ++fx)
+				{
+					dst(factor*x + fx, factor*y + fy) = mtx(x,y);
+				}
+			}
 		}
 	}
 }
+
+/*template <typename T> void NuLLProcessing::statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold)
+{
+	const uint width = mtx.width();
+	const uint height = mtx.height();
+
+	uint marker = 0;
+
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+
+			
+			
+		}
+	}
+}*/
 
 #endif

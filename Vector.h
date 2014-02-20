@@ -11,19 +11,34 @@ template <typename T> class Vector
         Vector(size_t dimension)
         {
             _dimension = dimension;
-            _entries = (T*) calloc(dimension, dimension * sizeof(T));
+            _entries = (T*) calloc(_dimension, sizeof(T));
         };
 
         Vector(const Vector& other)
         {
             _dimension = other._dimension;
-            _entries = (T*) malloc(_dimension * sizeof(T));
+			if(other._dimension > _dimension)
+				_entries = (T*) realloc(_entries, other._dimension * sizeof(T));
+
             memcpy(_entries, other._entries, _dimension * sizeof(T));
         };
 
-        virtual ~Vector(){free(_entries);};
+        ~Vector(){free(_entries);};
 
         inline size_t size() const {return _dimension;};
+
+		void fill(T val = 0)
+		{
+			for(uint i=0; i<_dimension; ++i)
+				_entries[i] = val;
+		};
+
+		void resize(size_t dimension)
+        {
+			this->_dimension = dimension;
+			if(dimension > _dimension)
+				this->_entries = (T*) realloc(_entries, dimension * sizeof(T));
+        };
 
         Vector& operator=(const Vector& other)
         {
@@ -112,11 +127,8 @@ template <typename T> class Vector
         friend std::ostream& operator<<(std::ostream& stream, const Vector<T>& vec)
         {
             for(uint i=0; i<vec._dimension; ++i)
-            {
-                stream << vec[i];
-                if(vec._dimension - i - 1)
-                    stream << ", ";
-            }
+                stream << "[" << vec[i] << "] ";
+
             return stream;
         };
 
