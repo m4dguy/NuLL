@@ -35,15 +35,17 @@ template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<
 
 //covolution with 1D kernel
 //faster than 2D convolution, with linear running time
-//valid alternative is kernel can be decomposed into a vector
-template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel)
+//valid alternative if kernel is separable
+template <typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelX, const Vector<T>& kernelY)
 {
 	const uint width = mtx.width();
 	const uint height = mtx.height();
 
 	T val;
-	const uint kSize = kernel.size();
-	const uint offset = kSize / 2;
+	const uint kSizeX = kernelX.size();
+	const uint kSizeY = kernelY.size();
+	const uint offsetX = kSizeX / 2;
+	const uint offsetY = kSizeY / 2;
 	Matrix<T> tmp(width, height);
 
 	//convolution in x-direction
@@ -52,9 +54,9 @@ template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<
 		for(uint x=0; x<width; ++x)
 		{
 			val = 0.;
-			for(uint i=0; i<kSize; ++i)
+			for(uint i=0; i<kSizeX; ++i)
 			{
-				val += kernel[i] * mtx.getMirrored(x+offset-i, y);
+				val += kernelX[i] * mtx.getMirrored(x+offsetX-i, y);
 			}
 			tmp(x,y) = val;
 		}
@@ -66,13 +68,21 @@ template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<
 		for(uint x=0; x<width; ++x)
 		{
 			val = 0;
-			for(uint i=0; i<kSize; ++i)
+			for(uint i=0; i<kSizeY; ++i)
 			{
-				val += kernel[i] * tmp.getMirrored(x, y+offset-i);
+				val += kernelY[i] * tmp.getMirrored(x, y+offsetY-i);
 			}
 			dst(x,y) = val;
 		}
 	}
+}
+
+//covolution with 1D kernel
+//faster than 2D convolution, with linear running time
+//valid alternative if kernel is separable
+template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel)
+{
+	convolve(mtx, dst, kernel, kernel);
 }
 
 //normalizes matrix to make sum of entries equal 1
@@ -128,6 +138,9 @@ template <typename T> void NuLLProcessing::pillboxKernel(Matrix<T>& dst, int rad
 //sigma/ variance parameter only has notable effect for large kernels
 template <typename T> void NuLLProcessing::gaussianKernel(Matrix<T>& dst, int radius, double sigma)
 {
+	if(!sigma)
+		sigma = radius;
+
     const uint dim = (2 * radius) + 1;
 	const double pi = 2.0 * asinf(1.0);
 
@@ -171,10 +184,13 @@ template <typename T> void NuLLProcessing::pillboxBlur(const Matrix<T>& mtx, Mat
 //uses separation theorem for fast convolution/ linear running time
 template <typename T> void NuLLProcessing::gaussianBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius, double sigma)
 {
+	if(!sigma)
+		sigma = radius;
+
 	const int kSize = (2 * radius) + 1;
 	const double pi = 2.0 * asinf(1.0);
-	T divExp = 2 * sigma * sigma;
-	T div = sqrt(2 * pi) * sigma;
+	const double divExp = 2 * sigma * sigma;
+	const double div = sqrt(2 * pi) * sigma;
     T res, scale;
     scale = 0;
 
@@ -239,6 +255,19 @@ template <typename T> void NuLLProcessing::secondDerivative(const Matrix<T>& mtx
             dst(x,y) = gradMag;
         }
     }
+}
+
+//canny edge detector
+template <typename T> void NuLLProcessing::cannyEdgeDetector(const Matrix<T>& mtx, Matrix<T>& dst, double sigma, T thresholdLower, T thresholdUpper)
+{
+	uint width = mtx.width();
+	uint height = mtx.height();
+	Matrix<T> tmp(width, height);
+
+	gaussianBlur(mtx, tmp, (int)sigma, sigma);
+	firstDerivative(tmp, dst);
+	//nonMaximaSuppression(dst, tmp);
+	hysteresisThresholding(tmp, dst, thresholdLower, thresholdUpper);
 }
 
 //result similar to derivative filter
@@ -455,7 +484,7 @@ template <typename T> void NuLLProcessing::snap(const Matrix<T>& mtx, Matrix<T>&
 }
 
 //filters out entries below threshold
-template <typename T> void NuLLProcessing::threshold(const Matrix<T>& mtx, Matrix<T>& dst, double threshold, double gmin, double gmax)
+template <typename T> void NuLLProcessing::thresholding(const Matrix<T>& mtx, Matrix<T>& dst, double threshold, double gmin, double gmax)
 {
 	for(uint y=0; y<mtx.height(); ++y)
 		for(uint x=0; x<mtx.width(); ++x)
@@ -463,7 +492,7 @@ template <typename T> void NuLLProcessing::threshold(const Matrix<T>& mtx, Matri
 }
 
 //filter entries outside range
-template <typename T> void NuLLProcessing::doubleThreshold(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper, double gmin, double gmax)
+template <typename T> void NuLLProcessing::doubleThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper, double gmin, double gmax)
 {
 	for(uint y=0; y<mtx.height(); ++y)
 		for(uint x=0; x<mtx.width(); ++x)
@@ -472,7 +501,7 @@ template <typename T> void NuLLProcessing::doubleThreshold(const Matrix<T>& mtx,
 
 //automatically calculate threshold value and filter out entries
 //uses otsu's method
-template <typename T> void NuLLProcessing::automatedThreshold(const Matrix<T>& mtx, Matrix<T>& dst, double gmin, double gmax)
+template <typename T> void NuLLProcessing::automatedThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double gmin, double gmax)
 {
 	double threshold = 0;
 
@@ -513,7 +542,38 @@ template <typename T> void NuLLProcessing::automatedThreshold(const Matrix<T>& m
 		}
 	}
 
-	NuLLProcessing::threshold(mtx, dst, threshold, gmin, gmax);
+	NuLLProcessing::thresholding(mtx, dst, threshold, gmin, gmax);
+}
+
+//hysteresis thresholding with thresholdUpper as seed
+//uses local neighbors for context
+template <typename T> void NuLLProcessing::hysteresisThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper)
+{
+	const int width = mtx.width();
+	const int height = mtx.height();
+
+	for(uint y=1; y<mtx.height()-1; ++y)
+	{
+		for(uint x=1; x<mtx.width()-1; ++x)
+		{
+			//get seed point
+			if(mtx(x,y) >= thresholdUpper)
+			{
+				//check direct neighborhood
+				for(int rx=-1; rx<=1; ++rx)
+				{
+					for(int ry=-1; ry<=1; ++ry)
+					{
+						if(mtx(x+rx, y+ry) >= thresholdLower)
+						{
+							dst(x+rx, y+ry) = 255.;
+						}
+					}
+				}
+			}
+		}
+	}
+
 }
 
 //simple gamma correction
@@ -619,22 +679,61 @@ template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix
 	}
 }
 
-/*template <typename T> void NuLLProcessing::statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold)
+template <typename T> void NuLLProcessing::nonMaximumSuppression(const Matrix<T>& mtx, Matrix<T>& dst)
 {
-	const uint width = mtx.width();
-	const uint height = mtx.height();
+	
+	
+	
+}
 
-	uint marker = 0;
+
+template <typename T> void NuLLProcessing::statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold)
+{
+	T val, diff;
+	bool changed = 0;
+	const int radius = 1;
+	const int width = mtx.width();
+	const int height = mtx.height();
+
+	uint ID = 0;
+	Matrix<uint> markers(width, height);
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			markers(x,y) = ID++;
+
+	while(changed)
+	{
+		changed = 0;
+		for(int y=1; y<height-1; ++y)
+		{
+			for(int x=1; x<width-1; ++x)
+			{
+				for(int ry=-radius; ry<=radius; ++ry)
+				{
+					for(int rx=-radius; rx<=radius; ++rx)
+					{
+						val = mtx(x+rx, y+ry);
+						diff = (val - mtx(x,y)<0)? (mtx(x,y) - val) : (val - mtx(x,y));
+						if(diff <= threshold)
+						{
+							changed = 1;
+							dst(x,y) = markers(x+rx, y+ry);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	for(uint y=0; y<height; ++y)
 	{
 		for(uint x=0; x<width; ++x)
 		{
 
-			
-			
 		}
 	}
-}*/
+
+
+}
 
 #endif

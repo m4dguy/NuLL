@@ -64,9 +64,10 @@ template<typename T> void HoughTransform::plotCircles(const std::vector<HoughCir
 	uint x, y;
 	int rad, radSq;
 	double radSqLow, radSqUp;
-	T col;
-	uint width = img.width();
-	uint height = img.height();
+	//T col;
+
+	const uint width = img.width();
+	const uint height = img.height();
 
 	for(uint i=0; i<circles.size(); ++i)
 	{
@@ -76,7 +77,7 @@ template<typename T> void HoughTransform::plotCircles(const std::vector<HoughCir
 		rad = c.radius;
 		radSqLow = (c.radius - .5) * (c.radius - .5);
 		radSqUp = (c.radius + .5) * (c.radius + .5);
-		col = (T)c.score;
+		//col = (T)c.score;
 
 		for(int ry=-rad; ry<=rad; ++ry)
 		{
@@ -85,10 +86,56 @@ template<typename T> void HoughTransform::plotCircles(const std::vector<HoughCir
 				radSq = (rx*rx + ry*ry);
 				if((radSqLow <= radSq) && (radSq < radSqUp))
 				{
-					img(x+rx, y+ry) = col;
+					img(x+rx, y+ry) = 255;
 				}
 				
 			}
 		}
 	}
+}
+
+void HoughTransform::mergeCircles(std::vector<HoughCircle>& circles, const uint maxDist)
+{
+	uint dist;
+	uint bSize;
+	const uint maxDistSq = maxDist * maxDist;
+
+	HoughCircle c;
+
+	std::vector<uint> done;
+	std::vector<HoughCircle> batch;
+	std::vector<HoughCircle> res;
+	done.resize(circles.size());
+	batch.reserve(circles.size());
+	res.reserve(circles.size());
+
+	for(uint i=0; i<circles.size()-1; ++i)
+	{
+		for(uint j=i+1; j<circles.size(); ++j)
+		{
+			if(done[j])
+				continue;
+
+			dist = (circles[i].x - circles[j].x) * (circles[i].x - circles[j].x) + (circles[i].y - circles[j].y) * (circles[i].y - circles[j].y);
+			if(dist <= maxDistSq)
+			{
+				done[i] = 1;
+				batch.push_back(circles[j]);
+			}
+		}
+
+		bSize = batch.size();
+		if(bSize)
+		{
+			c = batch[0];
+			for(uint b=0; b<bSize; ++b)
+			{
+				if(batch[b].score > c.score)
+					c = batch[b];
+			}
+			res.push_back(c);
+			batch.clear();
+		}
+	}
+	res.swap(circles);
 }
