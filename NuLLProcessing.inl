@@ -207,6 +207,20 @@ template <typename T> void NuLLProcessing::gaussianBlur(const Matrix<T>& mtx, Ma
 	convolve(mtx, dst, kernel);
 }
 
+//apply affine rescale afterwards or else over and undershoots occur
+template <typename T> void NuLLProcessing::differenceOfGaussians(const Matrix<T>& mtx, Matrix<T>& dst, int sigma1, int sigma2)
+{
+	Matrix<T> tmp(mtx.width(), mtx.height());
+
+	if(sigma1)
+		gaussianBlur(mtx, dst, sigma1);
+	else
+		dst = mtx;
+
+	gaussianBlur(mtx, tmp, sigma2);
+	dst -= tmp;
+}
+
 //first order derivative (central differential quotient) for matrices
 template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx, Matrix<T>& dst)
 {
@@ -573,7 +587,6 @@ template <typename T> void NuLLProcessing::hysteresisThresholding(const Matrix<T
 			}
 		}
 	}
-
 }
 
 //simple gamma correction

@@ -36,6 +36,8 @@ namespace NuLLProcessing
     template <typename T> void pillboxBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius = 1);
     template <typename T> void gaussianBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius = 1, double sigma = 0.0);
 
+	template <typename T> void differenceOfGaussians(const Matrix<T>& mtx, Matrix<T>& dst, int sigma1 = 0.0, int sigma2 = 10.0);
+
 	//derivative filters
     template <typename T> void firstDerivative(const Matrix<T>& mtx, Matrix<T>& dst);
     template <typename T> void secondDerivative(const Matrix<T>& mtx, Matrix<T>& dst);
