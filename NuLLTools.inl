@@ -31,13 +31,13 @@ template <typename T> void NuLLTools::getSegment(const Matrix<T>& src, Matrix<T>
 }
 
 //pastes matrix "other" into matrix "mtx"
-template <typename T> void NuLLTools::pasteAt(Matrix<T>& mtx, const Matrix<T>& other, int dstX, int dstY)
+template <typename T> void NuLLTools::pasteAt(const Matrix<T>& mtx, Matrix<T>& dst, int dstX, int dstY)
 {
-	size_t width = other.width();
-	size_t height = other.height();
+	size_t width = mtx.width();
+	size_t height = mtx.height();
 	for(uint y=0; y<width; ++y)
 		for(uint x=0; x<height; ++x)
-			mtx(x+dstX, y+dstY) = other(x,y);
+			dst(x+dstX, y+dstY) = mtx(x,y);
 }
 
 //copy matrix column to vector
@@ -52,11 +52,42 @@ template <typename T> void NuLLTools::getColumn(const Matrix<T>& src, Vector<T>&
 //copy matrix row to vector
 template <typename T> void NuLLTools::getRow(const Matrix<T>& src, Vector<T>& dst, uint row)
 {
-    size_t dim = src.width();
-    for(uint x=0; x<dim; ++x)
-        dst[x] = src(x, row);
+	size_t dim = src.width();
+	for(uint x=0; x<dim; ++x)
+		dst[x] = src(x, row);
 
 }
+
+template <typename T> void NuLLTools::elementwiseMultiplication(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst)
+{
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = mtx1(x,y) * mtx2(x,y);
+}
+
+template <typename T> void NuLLTools::elementwiseAddition(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst)
+{
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = mtx1(x,y) + mtx2(x,y);
+}
+
+template <typename T> void NuLLTools::elementwiseEquals(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst)
+{
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = (mtx1(x,y) == mtx2(x,y));
+}
+
 template <typename T> T NuLLTools::maxValue(const Matrix<T>& mtx)
 {
 	T maxV = mtx(0,0);
