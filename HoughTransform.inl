@@ -94,6 +94,7 @@ template<typename T> void HoughTransform::plotCircles(const std::vector<HoughCir
 	}
 }
 
+//merge nearby circles
 void HoughTransform::mergeCircles(std::vector<HoughCircle>& circles, uint maxDist)
 {
 	uint dist;
@@ -140,7 +141,7 @@ void HoughTransform::mergeCircles(std::vector<HoughCircle>& circles, uint maxDis
 	res.swap(circles);
 }
 
-template<typename T> void HoughTransform::histogramInCircle(const Matrix<T>& mtx, const HoughCircle& circ, std::vector<uint> hist)
+template<typename T> void HoughTransform::histogramInCircle(const Matrix<T>& mtx, const HoughCircle& circ, std::vector<uint>& hist)
 {
 	uint x = circ.x;
 	uint y = circ.y;
@@ -161,5 +162,4 @@ template<typename T> void HoughTransform::histogramInCircle(const Matrix<T>& mtx
 			}
 		}
 	}
-
 }

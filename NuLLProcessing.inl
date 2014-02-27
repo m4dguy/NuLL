@@ -222,7 +222,7 @@ template <typename T> void NuLLProcessing::differenceOfGaussians(const Matrix<T>
 }
 
 //first order derivative (central differential quotient) for matrices
-template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx, Matrix<T>& dst)
+template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx, Matrix<T>& dstGrad, Matrix<T>& dstDir)
 {
     int width = mtx.width();
     int height = mtx.height();
@@ -241,10 +241,20 @@ template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx,
             dy /= 2;
 
             gradMag = sqrt(dx*dx+dy*dy);
-            dst(x,y) = gradMag;
+            dstGrad(x,y) = gradMag;
+			dstDir(x,y) = (T)atan2(dy, dx);
         }
     }
 }
+
+//hack: overloaded function to keep code compatible
+//fix this...
+template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	Matrix<T> tmp(mtx.width(), mtx.height());
+	firstDerivative(mtx, dst, tmp);
+}
+
 
 //second order derivative (central differential quotient) for matrices
 template <typename T> void NuLLProcessing::secondDerivative(const Matrix<T>& mtx, Matrix<T>& dst)
@@ -272,17 +282,48 @@ template <typename T> void NuLLProcessing::secondDerivative(const Matrix<T>& mtx
 }
 
 //canny edge detector
-template <typename T> void NuLLProcessing::cannyEdgeDetector(const Matrix<T>& mtx, Matrix<T>& dst, double sigma, T thresholdLower, T thresholdUpper)
+//TODO: trouble with nonmax suppression and thus bad results
+//TODO: this is not exactly how it workz
+template <typename T> void NuLLProcessing::cannyEdgeDetector(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper, int sigma)
 {
 	uint width = mtx.width();
 	uint height = mtx.height();
 	Matrix<T> tmp(width, height);
+	Matrix<T> grad(width, height);
 
-	gaussianBlur(mtx, tmp, (int)sigma, sigma);
-	firstDerivative(tmp, dst);
-	//nonMaximaSuppression(dst, tmp);
+	gaussianBlur(mtx, tmp, sigma, sigma);
+	firstDerivative(tmp, grad);
+	nonMaximumSuppression(grad, tmp);
 	hysteresisThresholding(tmp, dst, thresholdLower, thresholdUpper);
 }
+
+//TODO: naive, sucky approach
+template <typename T> void NuLLProcessing::nonMaximumSuppression(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	T max;
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	for(uint y=1; y<height-1; ++y)
+	{
+		for(uint x=1; x<width-1; ++x)
+		{
+			max = 0;
+			for(int ry=-1; ry<=1; ++ry)
+			{
+				for(int rx=-1; rx<=1; ++rx)
+				{
+					if(!(rx && ry))
+						continue;
+
+					max = (mtx(x+rx,y+ry) >= max) ? mtx(x+rx,y+ry) : max;
+				}
+			}
+			dst(x,y) = (mtx(x,y) < max) ? 0 : 255;
+		}
+	}
+}
+
 
 //result similar to derivative filter
 //however, bigger neighborhoods can be respected
@@ -582,6 +623,10 @@ template <typename T> void NuLLProcessing::hysteresisThresholding(const Matrix<T
 						{
 							dst(x+rx, y+ry) = 255.;
 						}
+						else
+						{
+							dst(x+rx, y+ry) = 0.;
+						}
 					}
 				}
 			}
@@ -645,12 +690,16 @@ template <typename T> void NuLLProcessing::affineTransform(const Matrix<T>& mtx,
 
 //downsampling of image
 //low-pass filtering before use is recommended
-template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor)
+template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factorX, uint factorY)
 {
+	//only one factor given: keep ratio
+	if(!factorY)
+		factorY = factorX;
+
 	T val;
-	const uint width = mtx.width() / factor;
-	const uint height = mtx.height() / factor;
-	const uint scale = factor * factor;
+	const uint width = mtx.width() / factorX;
+	const uint height = mtx.height() / factorY;
+	const uint scale = factorX * factorY;
 	dst.resize(width, height);
 
 	for(uint y=0; y<height; y++)
@@ -658,11 +707,11 @@ template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matr
 		for(uint x=0; x<width; x++)
 		{
 			val = 0;
-			for(uint fy=0; fy<factor; ++fy)
+			for(uint fy=0; fy<factorY; ++fy)
 			{
-				for(uint fx=0; fx<factor; ++fx)
+				for(uint fx=0; fx<factorX; ++fx)
 				{
-					val += mtx(factor*x + fx, factor*y + fy);
+					val += mtx(factorX*x + fx, factorY*y + fy);
 				}
 			}
 			dst(x,y) = val / (T)scale;
@@ -671,34 +720,29 @@ template <typename T> void NuLLProcessing::downsample(const Matrix<T>& mtx, Matr
 }
 
 //upscaling of image
-template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor)
+template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factorX, uint factorY)
 {
+	if(!factorY)
+		factorY = factorX;
+
 	const uint width = mtx.width();
 	const uint height = mtx.height();
-	dst.resize(width*factor, height*factor);
+	dst.resize(width*factorX, height*factorY);
 
 	for(uint y=0; y<height; y++)
 	{
 		for(uint x=0; x<width; x++)
 		{
-			for(uint fy=0; fy<factor; ++fy)
+			for(uint fy=0; fy<factorY; ++fy)
 			{
-				for(uint fx=0; fx<factor; ++fx)
+				for(uint fx=0; fx<factorX; ++fx)
 				{
-					dst(factor*x + fx, factor*y + fy) = mtx(x,y);
+					dst(factorX*x + fx, factorY*y + fy) = mtx(x,y);
 				}
 			}
 		}
 	}
 }
-
-template <typename T> void NuLLProcessing::nonMaximumSuppression(const Matrix<T>& mtx, Matrix<T>& dst)
-{
-	
-	
-	
-}
-
 
 template <typename T> void NuLLProcessing::statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold)
 {

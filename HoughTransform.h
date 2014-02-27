@@ -36,7 +36,7 @@ namespace HoughTransform
 	template<typename T> void plotCircles(const std::vector<HoughCircle>& circles, Matrix<T>& img);
 
 	void mergeCircles(std::vector<HoughCircle>& circles, uint maxDist=10);
-	template<typename T> void histogramInCircle(const Matrix<T>& mtx, const HoughCircle& circ, std::vector<uint> hist);
+	template<typename T> void histogramInCircle(const Matrix<T>& mtx, const HoughCircle& circ, std::vector<uint>& hist);
 }
 
 #endif

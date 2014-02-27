@@ -5,6 +5,10 @@
 
 #include "Utils.h"
 
+/*
+ * TODO: wtf is this?! revise!
+ */
+
 template <typename T> class Vector
 {
     public:
@@ -17,15 +21,19 @@ template <typename T> class Vector
         Vector(const Vector& other)
         {
             _dimension = other._dimension;
-			if(other._dimension > _dimension)
-				_entries = (T*) realloc(_entries, other._dimension * sizeof(T));
-
+			_entries = (T*) calloc(other._dimension, sizeof(T));
             memcpy(_entries, other._entries, _dimension * sizeof(T));
         };
 
-        ~Vector(){free(_entries);};
+        ~Vector()
+		{
+			free(_entries);
+		};
 
-        inline size_t size() const {return _dimension;};
+        inline size_t size() const
+		{
+			return _dimension;
+		};
 
 		void fill(T val = 0)
 		{
@@ -37,7 +45,7 @@ template <typename T> class Vector
         {
 			this->_dimension = dimension;
 			if(dimension > _dimension)
-				this->_entries = (T*) realloc(_entries, dimension * sizeof(T));
+				T* _entries  = (T*) realloc(_entries, dimension * sizeof(T));
         };
 
         Vector& operator=(const Vector& other)
@@ -121,8 +129,8 @@ template <typename T> class Vector
             return !(*this == other);
         };
 
-        inline const T& operator[](uint i) const {return _entries[i];};
-        inline T& operator[](uint i){return _entries[i];};
+        inline const T& operator[](size_t i) const {return _entries[i];};
+        inline T& operator[](size_t i){return _entries[i];};
 
         friend std::ostream& operator<<(std::ostream& stream, const Vector<T>& vec)
         {

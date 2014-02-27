@@ -5,8 +5,7 @@
 #include "Vector.h"
 
 /*
- * Matrix class
- * Has number of pow2 entries for fast access
+ * TODO: wtf is this?! revise!
  */
 
 template <typename T> class Matrix
@@ -36,8 +35,8 @@ template <typename T> class Matrix
 			while((trueSize<<=1) < width)
                 ++(this->_power);
 
-            this->_memory = trueSize * this->_height * sizeof(T);
-            this->_entries = (T*) calloc(trueSize * this->_height, sizeof(T));
+            this->_memory = trueSize * height * sizeof(T);
+            this->_entries = (T*) calloc(trueSize * height, sizeof(T));
         };
 
         Matrix(const Matrix& other)
@@ -51,25 +50,26 @@ template <typename T> class Matrix
             memcpy(this->_entries, other._entries, other._memory);
         };
 
-        virtual ~Matrix()
+        ~Matrix()
         {
-            free(this->_entries);
+            free(_entries);
         };
 
-        virtual T& get(uint x, uint y)
+        T& get(size_t x, size_t y)
         {
-            return this->_entries[(y<<this->_power)|x];
+            return _entries[(y << _power) | x];
         };
 
-        virtual const T& get(uint x, uint y) const
+        const T& get(size_t x, size_t y) const
         {
-            return this->_entries[(y<<this->_power)|x];
+            return _entries[(y << _power) | x];
         };
 
         const T& getMirrored(int x, int y) const
         {
-            int w = _width;
+			int w = _width;
 			int h = _height;
+
 			x = abs(x);
             y = abs(y);
             x = (x>=w)? (w - (x - w + 1)) : x;
@@ -79,17 +79,17 @@ template <typename T> class Matrix
 
         T& getMirrored(int x, int y)
         {
-            int w = _width;
+			int w = _width;
 			int h = _height;
+
 			x = abs(x);
             y = abs(y);
             x = (x>=w)? (w - (x - w + 1)) : x;
             y = (y>=h)? (h - (y - h + 1)) : y;
-
             return get(x,y);
         };
 
-        inline void set(uint x, uint y, T& val)
+        inline void set(size_t x, size_t y, T& val)
         {
             (*this)(x,y) = val;
         };
@@ -111,7 +111,7 @@ template <typename T> class Matrix
 					get(x,y) = val;
 		};
 
-        virtual void resize(size_t width, size_t height)
+        void resize(size_t width, size_t height)
         {
             this->_width = width;
             this->_height = height;
@@ -122,15 +122,15 @@ template <typename T> class Matrix
                 ++(this->_power);
 
 			this->_memory = trueSize * height * sizeof(T);
-			this->_entries = (T*) calloc(trueSize * this->_height, sizeof(T));
+			this->_entries = (T*) realloc(_entries, trueSize * this->_height * sizeof(T));
         };
 
-        inline T& operator()(uint x, uint y)
+        inline T& operator()(size_t x, size_t y)
         {
             return get(x,y);
         }
 
-        inline const T& operator()(uint x, uint y) const
+        inline const T& operator()(size_t x, size_t y) const
         {
             return get(x,y);
         }
@@ -157,19 +157,39 @@ template <typename T> class Matrix
         {
             for(uint x=0; x<this->_width; ++x)
                 for(uint y=0; y<this->_height; ++y)
-                    this->get(x,y) += A(x,y);
+                    get(x,y) += A(x,y);
 
             return *this;
         }
+
+		Matrix<T> operator+(const Matrix<T>& A)
+		{
+			Matrix<T> res(_width, _height);
+			for(uint x=0; x<_width; ++x)
+				for(uint y=0; y<_height; ++y)
+					res(x,y) = get(x,y) + A(x,y);
+
+			return res;
+		}
 
         Matrix<T>& operator-=(const Matrix<T>& A)
         {
             for(uint x=0; x<this->_width; ++x)
                 for(uint y=0; y<this->_height; ++y)
-                    this->get(x,y) -= A(x,y);
+                    get(x,y) -= A(x,y);
 
             return *this;
         }
+
+		Matrix<T> operator-(const Matrix<T>& A)
+		{
+			Matrix<T> res(_width, _height);
+			for(uint x=0; x<_width; ++x)
+				for(uint y=0; y<_height; ++y)
+					res(x,y) = get(x,y) - A(x,y);
+
+			return res;
+		}
 
         Matrix<T> operator*(const Matrix<T>& mtx)
         {
@@ -185,7 +205,7 @@ template <typename T> class Matrix
                     entry = 0;
                     for(uint k=0; k<height; ++k)
                     {
-                        entry += this->get(k,i) * mtx(j,k);
+                        entry += get(k,i) * mtx(j,k);
                     }
                     res(j,i) = entry;
                 }
@@ -234,13 +254,13 @@ template <typename T> class Matrix
                 {
                     //save row; will be overwritten otherwise
                     for(uint k=0; k<w; ++k)
-                        row[k] = this->get(k,y);
+                        row[k] = get(k,y);
 
                     entry = 0;
                     for(uint k=0; k<h; ++k)
                         entry += row[k] * A(x,k);
 
-                    this->get(y,x) = entry;
+                    get(y,x) = entry;
                 }
             }
             return *this;
