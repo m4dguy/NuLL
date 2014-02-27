@@ -8,7 +8,7 @@
 namespace NuLLTools
 {
 	//copying of entries
-	template <typename T> void copyMatrix(const Matrix<T>& src, Matrix<T>& dst);
+	template <typename T, typename U> void copyMatrix(const Matrix<T>& src, Matrix<U>& dst);
 	template <typename T> void getSegment(const Matrix<T>& src, Matrix<T>& dst, int startX=0, int startY=0, int endX=1, int endY=1);
 	template <typename T> void pasteAt(const Matrix<T>& mtx, Matrix<T>& dst, int dstX=0, int dstY=0);
 
@@ -25,6 +25,7 @@ namespace NuLLTools
 	template <typename T> T maxValue(const Matrix<T>& mtx);
 	template <typename T> T minValue(const Matrix<T>& mtx);
 	template <typename T> T average(const Matrix<T>& mtx);
+	template <typename T> void abs(const Matrix<T>& mtx, Matrix<T>& dst);
 }
 
 #endif // NULLTOOLS_H

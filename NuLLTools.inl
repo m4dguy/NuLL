@@ -5,13 +5,14 @@
 
 //can be used for matrix conversion
 //copy content of matrix src to matrix dst
-template <typename T> void NuLLTools::copyMatrix(const Matrix<T>& src, Matrix<T>& dst)
+//useful for type conversion
+template <typename T, typename U> void NuLLTools::copyMatrix(const Matrix<T>& src, Matrix<U>& dst)
 {
     size_t width = src.width();
     size_t height = src.height();
     for(uint y=0; y<height; ++y)
         for(uint x=0; x<width; ++x)
-            dst(x,y) = src(x,y);
+            dst(x,y) = (U)src(x,y);
 }
 
 //copy segment of matrix to dst
@@ -126,6 +127,17 @@ template <typename T> T NuLLTools::average(const Matrix<T>& mtx)
 
 	avg /= width * height;
 	return avg;
+}
+
+template <typename T> void NuLLTools::abs(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	T abs;
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = (mtx(x,y)>=0)? mtx(x,y) : ((-1)*mtx(x,y));
 }
 
 #endif
