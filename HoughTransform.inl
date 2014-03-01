@@ -2,60 +2,62 @@
 
 template<typename T> void HoughTransform::houghCircles(const Matrix<T>& img, std::vector<HoughCircle>& circles, double threshold, int minRad, int maxRad)
 {
-	HoughCircle circBest;
-	uint scale;
+	HoughCircle circ;
+	int rx, ry;
+	uint pixels;
 	double score;
 	double radSq, radSqLow, radSqUp;
 
 	const uint width = img.width();
 	const uint height = img.height();
 
-	for(uint y=minRad; y<height-minRad; y+=2)
-	{
-		for(uint x=minRad; x<width-minRad; x+=2)
-		{
-			circBest.score = 0;
-			//find circles of varying radius
-			for(int rad=minRad; rad<=maxRad; ++rad)
-			{
-				if((x+rad >= width) || (y+rad >= height) || (x-rad <= 0) || (y-rad <= 0))
-					break;
+	std::vector<std::pair<uint,uint> > mask;
+	mask.reserve(maxRad * maxRad);			//TODO: too many reserved; #pixels <= ceil(#area / 2)
 
-				radSqLow = (rad - .5) * (rad - .5);
-				radSqUp = (rad + .5) * (rad + .5);
-				score = 0;
-				scale = 1;
-				//scan area
-				for(int ry=-rad; ry<=rad; ++ry)
+	for(int rad=minRad; rad<=maxRad; ++rad)
+	{
+		radSqLow = (rad - .5) * (rad - .5);
+		radSqUp = (rad + .5) * (rad + .5);
+
+		//precalculate pixels in circle
+		for(rx=-rad; rx<=rad; ++rx)
+		{
+			for(ry=-rad; ry<=rad; ++ry)
+			{
+				radSq = (rx*rx + ry*ry);
+				if((radSqLow <= radSq) && (radSq < radSqUp))
 				{
-					for(int rx=-rad; rx<=rad; ++rx)
-					{
-						radSq = (rx*rx + ry*ry);
-						if((radSqLow <= radSq) && (radSq < radSqUp))
-						{
-							++scale;
-							score += img(x+rx, y+ry);
-						}
-					}
+					mask.push_back(std::make_pair(rx,ry));
+				}
+			}
+		}
+		pixels = mask.size();
+
+		//check image
+		for(uint y=rad; y<height-rad; ++y)
+		{
+			for(uint x=rad; x<width-rad; ++x)
+			{
+				for(uint i=0; i<pixels; ++i)
+				{
+					rx = mask[i].first;
+					ry = mask[i].second;
+					score += img(x+rx, y+ry);
 				}
 				
 				//check if circle found
-				score /= scale;
-				if(score > circBest.score)
+				score /= pixels;
+				if(score >= threshold)
 				{
-					circBest.x = x;
-					circBest.y = y;
-					circBest.radius = rad;
-					circBest.score = score;
+					circ.x = x;
+					circ.y = y;
+					circ.radius = rad;
+					circ.score = score;
+					circles.push_back(circ);
 				}
 			}
-
-			if(circBest.score > threshold)
-			{
-				circles.push_back(circBest);
-			}
-		
 		}
+		mask.clear();
 	}
 }
 
