@@ -8,8 +8,12 @@ template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& sr
 	//assume depth = 3
 	uint index;				//buffer index
 	const uint depth = 3;
-	size_t height = src.height();
-	size_t width = src.width();
+	const size_t height = src.height();
+	const size_t width = src.width();
+	
+	//free(dst);
+	//size_t requiredSize = depth * width * height * sizeof(uchar);
+	//dst = new uchar[requiredSize];
 
 	for(uint y=0; y<height; ++y)
 	{
@@ -31,8 +35,8 @@ template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& sr
 	//assume depth = 3
 	uint index;				//buffer index
 	const uint depth = 3;
-	size_t height = srcR.height();
-	size_t width = srcR.width();
+	const size_t height = srcR.height();
+	const size_t width = srcR.width();
 
 	for(uint y=0; y<height; ++y)
 	{
@@ -52,9 +56,8 @@ template<typename T> void FLTKInterface::pixelbufferToMatrix(const uchar* src, M
 	T val;
 	uint index;				//buffer index
 	const uint depth = 3;
-	size_t height = dst.height();
-	size_t width = dst.width();
-	
+	const size_t height = dst.height();
+	const size_t width = dst.width();
 
 	for(uint y=0; y<height; ++y)
 	{
@@ -71,8 +74,8 @@ template<typename T> void FLTKInterface::pixelbufferToMatrix(const uchar* src, M
 template<typename T> void FLTKInterface::pixelbufferToMatrix(const uchar* src, Matrix<T>& dstR, Matrix<T>& dstG, Matrix<T>& dstB)
 {
 	uint index;				//buffer index
-	size_t height = dstR.height();
-	size_t width = dstR.width();
+	const size_t height = dstR.height();
+	const size_t width = dstR.width();
 
 	for(uint y=0; y<height; ++y)
 	{
@@ -90,8 +93,8 @@ template<typename T> void FLTKInterface::imageToMatrix(const Fl_Image& src, Matr
 {
 	uint index;				//buffer index
 	const uint depth = src.d();
-	uint height = src.h();
-	uint width = src.w();
+	const uint height = src.h();
+	const uint width = src.w();
 	
 	T val;
 	const char* buf = src.data()[0];
@@ -140,8 +143,8 @@ template<typename T> void FLTKInterface::imageToMatrix(const Fl_Image& src, Matr
 {
 	uint index;				//buffer index
 	const uint depth = src.d();
-	uint height = src.height();
-	uint width = src.width();
+	const uint height = src.height();
+	const uint width = src.width();
 
 	const char* buf = src.data()[0];
 	uchar r,g,b;

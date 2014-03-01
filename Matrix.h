@@ -10,8 +10,8 @@
 
 template <typename T> class Matrix
 {
-    public:
-        Matrix(size_t dimension)
+	public:
+		Matrix(size_t dimension)
         {
             this->_width = this->_height = dimension;
 
@@ -55,12 +55,12 @@ template <typename T> class Matrix
             free(_entries);
         };
 
-        T& get(size_t x, size_t y)
+        inline T& get(size_t x, size_t y)
         {
             return _entries[(y << _power) | x];
         };
 
-        const T& get(size_t x, size_t y) const
+        inline const T& get(size_t x, size_t y) const
         {
             return _entries[(y << _power) | x];
         };
@@ -266,65 +266,65 @@ template <typename T> class Matrix
             return *this;
         }
 
-        Matrix<T>& operator/=(T scalar)
-        {
-            size_t dim = _memory / sizeof(T);
-            for(uint i=0; i<dim; ++i)
-                _entries[i] /= scalar;
+		Matrix<T>& operator/=(T scalar)
+		{
+			size_t dim = _memory / sizeof(T);
+			for(uint i=0; i<dim; ++i)
+				_entries[i] /= scalar;
 
-            return *this;
-        };
+			return *this;
+		};
 
-        bool operator==(const Matrix<T>& other) const
-        {
-            if((other._width != this->_width) && (other._height != this->_height))
-                return 0;
+		bool operator==(const Matrix<T>& other) const
+		{
+			if((other._width != this->_width) && (other._height != this->_height))
+				return 0;
 
-            bool eq = 1;
-            for(uint x=0; x<_width; ++x)
-                for(uint y=0; y<_height; ++y)
-                    eq &= (other.get(x,y) == get(x,y));
+			bool eq = 1;
+			for(uint x=0; x<_width; ++x)
+				for(uint y=0; y<_height; ++y)
+					eq &= (other.get(x,y) == get(x,y));
 
-            return eq;
-        };
+		return eq;
+		};
 
-        bool operator!=(const Matrix<T>& other) const
-        {
-            return !(*this == other);
-        };
+		bool operator!=(const Matrix<T>& other) const
+		{
+			return !(*this == other);
+		};
 
 		//output in csv format for file dumps
-        friend std::ostream& operator<<(std::ostream& stream, const Matrix<T>& mtx)
-        {
-            for(uint y=0; y<mtx._height; ++y)
-            {
-                for(uint x=0; x<mtx._width; ++x)
-                {
-                    stream << mtx.get(x,y);
+		friend std::ostream& operator<<(std::ostream& stream, const Matrix<T>& mtx)
+		{
+			for(uint y=0; y<mtx._height; ++y)
+			{
+				for(uint x=0; x<mtx._width; ++x)
+				{
+					stream << mtx.get(x,y);
 
 					if(mtx._width - x - 1)
 						stream << ", ";
 				}
-                stream << std::endl;
-            }
-            return stream;
-        };
+				stream << std::endl;
+			}
+			return stream;
+		};
 
-        //use for debugging
-        inline void print()
-        {
-            std::cout << (*this) << std::endl;
-        };
+		//use for debugging
+		inline void print()
+		{
+			std::cout << (*this) << std::endl;
+		};
 
-    protected:
-        uint _power;
-        size_t _width;          //matrix dimensions
-        size_t _height;
+	protected:
+		uint _power;
+		size_t _width;			//matrix dimensions
+		size_t _height;
 
-        size_t _memory;         //used for memory management and operators
-        T* _entries;            //pointer to entries
+		size_t _memory;			//used for memory management and operators
+		T* _entries;			//pointer to entries
 
-    private:
+	private:
 };
 
 typedef Matrix<double> MatrixD;
