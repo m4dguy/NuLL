@@ -143,8 +143,8 @@ template<typename T> void FLTKInterface::imageToMatrix(const Fl_Image& src, Matr
 {
 	uint index;				//buffer index
 	const uint depth = src.d();
-	const uint height = src.height();
-	const uint width = src.width();
+	const uint height = src.h();
+	const uint width = src.w();
 
 	const char* buf = src.data()[0];
 	uchar r,g,b;
