@@ -72,8 +72,8 @@ template <typename T> class Matrix
 
 			x = abs(x);
             y = abs(y);
-            x = (x>=w)? (w - (x - w)) : x;
-            y = (y>=h)? (h - (y - h)) : y;
+            x = (x>=w)? (w - (x - w) - 1) : x;
+            y = (y>=h)? (h - (y - h) - 1) : y;
             return get(x,y);
         };
 
@@ -84,8 +84,8 @@ template <typename T> class Matrix
 
 			x = abs(x);
             y = abs(y);
-            x = (x>=w)? (w - (x - w)) : x;
-            y = (y>=h)? (h - (y - h)) : y;
+            x = (x>=w)? (w - (x - w) - 1) : x;
+            y = (y>=h)? (h - (y - h) - 1) : y;
             return get(x,y);
         };
 
