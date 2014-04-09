@@ -131,13 +131,22 @@ template <typename T> T NuLLTools::average(const Matrix<T>& mtx)
 
 template <typename T> void NuLLTools::abs(const Matrix<T>& mtx, Matrix<T>& dst)
 {
-	T abs;
 	size_t width = mtx.width();
 	size_t height = mtx.height();
 
 	for(uint y=0; y<height; ++y)
 		for(uint x=0; x<width; ++x)
 			dst(x,y) = (mtx(x,y)>=0)? mtx(x,y) : ((-1)*mtx(x,y));
+}
+
+template <typename T> void NuLLTools::sqrt(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = (T)sqrt((double)mtx(x,y));
 }
 
 #endif

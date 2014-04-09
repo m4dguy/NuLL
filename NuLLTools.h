@@ -1,6 +1,8 @@
 #ifndef NULLTOOLS_H
 #define NULLTOOLS_H
 
+#include <math.h>
+
 #include "Utils.h"
 #include "Vector.h"
 #include "Matrix.h"
@@ -26,6 +28,7 @@ namespace NuLLTools
 	template <typename T> T minValue(const Matrix<T>& mtx);
 	template <typename T> T average(const Matrix<T>& mtx);
 	template <typename T> void abs(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> void sqrt(const Matrix<T>& mtx, Matrix<T>& dst);
 }
 
 #endif // NULLTOOLS_H
