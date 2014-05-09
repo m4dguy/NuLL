@@ -26,6 +26,8 @@ namespace NuLLProcessing
     template <typename T> void convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Matrix<T>& kernel);
 	template <typename T> void convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel);
 	template <typename T> void convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelX, const Vector<T>& kernelY);
+	template <typename T> void convolveX(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelX);
+	template <typename T> void convolveY(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelY);
 
 	//kernel generators
 	template <typename T> void identityKernel(Matrix<T>& dst, int radius = 1);
@@ -42,14 +44,12 @@ namespace NuLLProcessing
 	template <typename T> void firstDerivative(const Matrix<T>& mtx, Matrix<T>& dst);
 	template <typename T> void firstDerivative(const Matrix<T>& mtx, Matrix<T>& dstGrad, Matrix<T>& dstDir);
 	template <typename T> void secondDerivative(const Matrix<T>& mtx, Matrix<T>& dst);
-	template <typename T> void cannyEdgeDetector(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper, int sigma=1.0);
-	
-	//edge thinning
-	template <typename T> void nonMaximumSuppression(const Matrix<T>& mtx, Matrix<T>& dst);
 
 	//others
+	template <typename T> void distanceTransform(const Matrix<T>& mtx, Matrix<T>& dst);
 	template <typename T> void localVariance(const Matrix<T>& mtx, Matrix<T>& dst, int radius = 1);
-	template <typename T> void localCurvature(const Matrix<T>& mty, Matrix<T>& dst, int radius = 1);
+	template <typename T> void meanCurvature(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> void harrisCorners(const Matrix<T>& mtx, Matrix<T>& dst);
 
 	//morphological filters
     template <typename T> void medianFilter(const Matrix<T>& mtx, Matrix<T>& dst, int radius = 1, float percentile = .5f);
@@ -71,11 +71,14 @@ namespace NuLLProcessing
 	template <typename T> void thresholding(const Matrix<T>& mtx, Matrix<T>& dst, double threshold, double gmin = 0, double gmax = 255);
 	template <typename T> void doubleThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper, double gmin = 0, double gmax = 255);
 	template <typename T> void automatedThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double gmin = 0, double gmax = 255);
-	template <typename T> void hysteresisThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper);
-
+	
 	//up- and downscaling
 	template <typename T> void downsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factorX=2, uint factorY=0);
 	template <typename T> void upsample(const Matrix<T>& mtx, Matrix<T>& dst, uint factor=2, uint factorY=0);
+
+	//mirroring
+	template <typename T> void mirrorX(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> void mirrorY(const Matrix<T>& mtx, Matrix<T>& dst);
 
 	//misc/experimental
 	template <typename T> void statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold=5.);

@@ -36,17 +36,31 @@ template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<
 //covolution with 1D kernel
 //faster than 2D convolution, with linear running time
 //valid alternative if kernel is separable
+template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel)
+{
+	convolve(mtx, dst, kernel, kernel);
+}
+
+//covolution with 1D kernel
+//faster than 2D convolution, with linear running time
+//valid alternative if kernel is separable
 template <typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelX, const Vector<T>& kernelY)
+{
+	Matrix<T> tmp(mtx.width(), mtx.height());
+	NuLLProcessing::convolveX(mtx, tmp, kernelX);
+	NuLLProcessing::convolveY(tmp, dst, kernelY);
+}
+
+//convolution with 1D kernel
+//x direction only
+template <typename T> void NuLLProcessing::convolveX(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelX)
 {
 	const uint width = mtx.width();
 	const uint height = mtx.height();
 
 	T val;
 	const uint kSizeX = kernelX.size();
-	const uint kSizeY = kernelY.size();
 	const uint offsetX = kSizeX / 2;
-	const uint offsetY = kSizeY / 2;
-	Matrix<T> tmp(width, height);
 
 	//convolution in x-direction
 	for(uint y=0; y<height; ++y)
@@ -58,9 +72,21 @@ template <typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix
 			{
 				val += kernelX[i] * mtx.getMirrored(x+offsetX-i, y);
 			}
-			tmp(x,y) = val;
+			dst(x,y) = val;
 		}
 	}
+}
+
+//convolution with 1D kernel
+//x direction only
+template <typename T> void NuLLProcessing::convolveY(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernelY)
+{
+	const uint width = mtx.width();
+	const uint height = mtx.height();
+
+	T val;
+	const uint kSizeY = kernelY.size();
+	const uint offsetY = kSizeY / 2;
 
 	//convolution in y-direction
 	for(uint y=0; y<height; ++y)
@@ -70,19 +96,11 @@ template <typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix
 			val = 0;
 			for(uint i=0; i<kSizeY; ++i)
 			{
-				val += kernelY[i] * tmp.getMirrored(x, y+offsetY-i);
+				val += kernelY[i] * mtx.getMirrored(x, y+offsetY-i);
 			}
 			dst(x,y) = val;
 		}
 	}
-}
-
-//covolution with 1D kernel
-//faster than 2D convolution, with linear running time
-//valid alternative if kernel is separable
-template<typename T> void NuLLProcessing::convolve(const Matrix<T>& mtx, Matrix<T>& dst, const Vector<T>& kernel)
-{
-	convolve(mtx, dst, kernel, kernel);
 }
 
 //normalizes matrix to make sum of entries equal 1
@@ -104,11 +122,7 @@ template<typename T> void NuLLProcessing::normalize(Matrix<T>& mtx)
 //useful for kernel design
 template <typename T> void NuLLProcessing::identityKernel(Matrix<T>& dst, int radius)
 {
-	const uint dim = (2 * radius) + 1;
-	for(uint y=0; y<dim; ++y)
-		for(uint x=0; x<dim; ++x)
-			dst(x,y) = 0;
-
+	dst.fill(0.0);
 	dst(radius, radius) = 1.0;
 }
 
@@ -224,25 +238,28 @@ template <typename T> void NuLLProcessing::differenceOfGaussians(const Matrix<T>
 //first order derivative (central differential quotient) for matrices
 template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx, Matrix<T>& dstGrad, Matrix<T>& dstDir)
 {
-    int width = mtx.width();
-    int height = mtx.height();
-    T dx, dy, gradMag;
+    uint width = mtx.width();
+    uint height = mtx.height();
+    T gradMag;
 
-    for(int y=0; y<height; ++y)
+	Matrix<T> dx(width, height);
+	Matrix<T> dy(width, height);
+
+	Vector<T> stencil(3);
+	stencil[0] = -.5;
+	stencil[1] = 0;
+	stencil[2] = .5;
+
+	convolveX(mtx, dx, stencil);
+	convolveY(mtx, dy, stencil);
+
+    for(uint y=0; y<height; ++y)
     {
-        for(int x=0; x<width; ++x)
+        for(uint x=0; x<width; ++x)
         {
-            dx = mtx.getMirrored(x+1,y);
-            dx -= mtx.getMirrored(x-1, y);
-            dx /= 2;
-
-            dy = mtx.getMirrored(x, y-1);
-            dy -= mtx.getMirrored(x, y+1);
-            dy /= 2;
-
-            gradMag = sqrt(dx*dx+dy*dy);
+            gradMag = sqrt(dx(x,y) * dx(x,y) + dy(x,y) * dy(x,y));
             dstGrad(x,y) = gradMag;
-			dstDir(x,y) = (T)atan2(dy, dx);
+			dstDir(x,y) = (T)atan2(dy(x,y), dx(x,y));
         }
     }
 }
@@ -259,71 +276,166 @@ template <typename T> void NuLLProcessing::firstDerivative(const Matrix<T>& mtx,
 //second order derivative (central differential quotient) for matrices
 template <typename T> void NuLLProcessing::secondDerivative(const Matrix<T>& mtx, Matrix<T>& dst)
 {
-    int width = mtx.width();
-    int height = mtx.height();
-    T dx, dy, gradMag;
+    uint width = mtx.width();
+    uint height = mtx.height();
+    T gradMag;
 
-    for(int y=0; y<height; ++y)
+	Matrix<T> dxx(width, height);
+	Matrix<T> dyy(width, height);
+
+	Vector<T> stencil(3);
+	stencil[0] = 1;
+	stencil[1] = -2;
+	stencil[2] = 1;
+
+	convolveX(mtx, dxx, stencil);
+	convolveY(mtx, dyy, stencil);
+
+    for(uint y=0; y<height; ++y)
     {
-        for(int x=0; x<width; ++x)
+        for(uint x=0; x<width; ++x)
         {
-            dx = mtx.getMirrored(x-1, y);
-            dx -= 2 * mtx.getMirrored(x, y);
-            dx += mtx.getMirrored(x+1, y);
-
-            dy = mtx.getMirrored(x, y+1);
-            dy -= 2 * mtx.getMirrored(x, y);
-            dy += mtx.getMirrored(x, y-1);
-
-            gradMag = sqrt(dx*dx+dy*dy);
+            gradMag = sqrt(dxx(x,y)*dxx(x,y)+dyy(x,y)*dyy(x,y));
             dst(x,y) = gradMag;
         }
     }
 }
 
-//canny edge detector
-//TODO: trouble with nonmax suppression and thus bad results
-//TODO: this is not exactly how it workz
-template <typename T> void NuLLProcessing::cannyEdgeDetector(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper, int sigma)
+//distance transform
+//use on binary images with values: 0, 255
+template <typename T> void NuLLProcessing::distanceTransform(const Matrix<T>& mtx, Matrix<T>& dst)
 {
-	uint width = mtx.width();
+	uint  width = mtx.width();
 	uint height = mtx.height();
+	
+	//max distance
+	const T inf = (width * width + height * height);
+	
+	uint in;						//point with distance information
+	T val, valMin;					//calculated distance
+
 	Matrix<T> tmp(width, height);
-	Matrix<T> grad(width, height);
+	Matrix<T> res(width, height);		//starts with zero distance
 
-	gaussianBlur(mtx, tmp, sigma, sigma);
-	firstDerivative(tmp, grad);
-	nonMaximumSuppression(grad, tmp);
-	hysteresisThresholding(tmp, dst, thresholdLower, thresholdUpper);
-}
-
-//TODO: naive, sucky approach
-template <typename T> void NuLLProcessing::nonMaximumSuppression(const Matrix<T>& mtx, Matrix<T>& dst)
-{
-	T max;
-	size_t width = mtx.width();
-	size_t height = mtx.height();
-
-	for(uint y=1; y<height-1; ++y)
+	//init distances
+	for(uint y=0; y<height; ++y)
 	{
-		for(uint x=1; x<width-1; ++x)
+		for(uint x=0; x<width; ++x)
 		{
-			max = 0;
-			for(int ry=-1; ry<=1; ++ry)
-			{
-				for(int rx=-1; rx<=1; ++rx)
-				{
-					if(!(rx && ry))
-						continue;
-
-					max = (mtx(x+rx,y+ry) >= max) ? mtx(x+rx,y+ry) : max;
-				}
-			}
-			dst(x,y) = (mtx(x,y) < max) ? 0 : 255;
+			if(mtx(x,y) == 255)
+				tmp(x,y) = 0;
+			else
+				tmp(x,y) = inf;
 		}
 	}
-}
 
+	//transform in x direction
+	for(uint y=0; y<height; ++y)
+	{
+		//forward direction
+		for(uint x=1; x<width; ++x)
+		{
+			//find reference point inside object
+			if(tmp(x,y) <= res(x-1,y))
+			{
+				res(x,y) = tmp(x,y);
+				in = x;
+			}
+			else
+			{
+				valMin = inf;
+				for(uint xi=in; xi<x; ++xi)
+				{
+					val = tmp(xi,y) + (x-xi) * (x-xi);
+					if(val <= valMin)
+					{
+						valMin = val;
+						in = xi;
+					}
+				}
+				res(x,y) = valMin;
+			}
+		}
+		
+		//backward direction
+		for(int x=width-2; x>=0; --x)
+		{
+			//find reference point inside object
+			if(res(x,y) <= tmp(x+1,y))
+			{
+				tmp(x,y) = res(x,y);
+				in = x;
+			}
+			else
+			{
+				valMin = inf;
+				for(int xi=in; xi>x; --xi)
+				{
+					val = res(xi,y) + (x-xi) * (x-xi);
+					if(val <= valMin)
+					{
+						valMin = val;
+						in = xi;
+					}
+				}
+				tmp(x,y) = valMin;
+			}
+		}
+	}
+
+	//transform in y direction
+	for(uint x=0; x<width; ++x)
+	{
+		//forward direction
+		for(uint y=1; y<height; ++y)
+		{
+			if(tmp(x,y) <= res(x,y-1))
+			{
+				res(x,y) = tmp(x,y);
+				in = y;
+			}
+			else
+			{
+				valMin = inf;
+				for(uint yi=in; yi<y; ++yi)
+				{
+					val = tmp(x,yi) + (y-yi) * (y-yi);
+					if(val <= valMin)
+					{
+						valMin = val;
+						in = yi;
+					}
+				}
+				res(x,y) = valMin;
+			}
+		}
+
+		//backward direction
+		for(int y=height-2; y>=0; --y)
+		{
+			if(res(x,y) <= tmp(x,y+1))
+			{
+				tmp(x,y) = res(x,y);
+				in = y;
+			}
+			else
+			{
+				valMin = inf;
+				for(int yi=in; yi>y; --yi)
+				{
+					val = res(x,yi) + (y-yi) * (y-yi);
+					if(val <= valMin)
+					{
+						valMin = val;
+						in = yi;
+					}
+				}
+				tmp(x,y) = valMin;
+			}
+		}
+	}
+	dst = tmp;
+}
 
 //result similar to derivative filter
 //however, bigger neighborhoods can be respected
@@ -371,12 +483,64 @@ template <typename T> void NuLLProcessing::localVariance(const Matrix<T>& mtx, M
     }
 }
 
-//TODO: implement me!
 //curvature filter
-template <typename T> void NuLLProcessing::localCurvature(const Matrix<T>& mty, Matrix<T>& dst, int radius)
+template <typename T> void NuLLProcessing::meanCurvature(const Matrix<T>& mtx, Matrix<T>& dst)
 {
+	uint width = mtx.width();
+	uint height = mtx.height();
+	T dxSq, dySq;
+	T k1, k2;
 
+	Matrix<T> dx(width, height);
+	Matrix<T> dy(width, height);
 
+	Vector<T> stencil(3);
+	stencil[0] = -.5;
+	stencil[1] = 0;
+	stencil[2] = .5;
+
+	convolveX(mtx, dx, stencil);
+	convolveY(mtx, dy, stencil);
+
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+			dxSq = dx(x,y)*dx(x,y);
+			dySq = dy(x,y)*dy(x,y);
+			k1 = .5*(dxSq + dySq) + sqrt(((dxSq+dySq)/4) - dxSq*dySq + 2*dx(x,y)*dy(x,y));
+			k2 = .5*(dxSq + dySq) - sqrt(((dxSq+dySq)/4) - dxSq*dySq + 2*dx(x,y)*dy(x,y));
+			dst(x,y) = (k1+k2)/2;
+		}
+	}
+}
+
+template <typename T> void NuLLProcessing::harrisCorners(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	uint width = mtx.width();
+	uint height = mtx.height();
+	T det, tr;
+
+	Matrix<T> dx(width, height);
+	Matrix<T> dy(width, height);
+
+	Vector<T> stencil(3);
+	stencil[0] = -.5;
+	stencil[1] = 0;
+	stencil[2] = .5;
+
+	convolveX(mtx, dx, stencil);
+	convolveY(mtx, dy, stencil);
+
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+			det = dx(x,y)*dx(x,y) * dy(x,y)*dy(x,y) - 2*dx(x,y)*dy(x,y);
+			tr = dx(x,y)*dx(x,y) + dy(x,y)*dy(x,y);
+			dst(x,y) = det / tr;
+		}
+	}
 }
 
 //median filtering for matrices
@@ -567,7 +731,7 @@ template <typename T> void NuLLProcessing::automatedThresholding(const Matrix<T>
 	double totalMean = 0;
 
 	double cumulProb = 0;
-	Vector<double> prob(255);
+	Vector<double> prob(256);
 
 	//probabilities for each colour
 	for(uint y=0; y<mtx.height(); ++y)
@@ -598,40 +762,6 @@ template <typename T> void NuLLProcessing::automatedThresholding(const Matrix<T>
 	}
 
 	NuLLProcessing::thresholding(mtx, dst, threshold, gmin, gmax);
-}
-
-//hysteresis thresholding with thresholdUpper as seed
-//uses local neighbors for context
-template <typename T> void NuLLProcessing::hysteresisThresholding(const Matrix<T>& mtx, Matrix<T>& dst, double thresholdLower, double thresholdUpper)
-{
-	const int width = mtx.width();
-	const int height = mtx.height();
-
-	for(uint y=1; y<mtx.height()-1; ++y)
-	{
-		for(uint x=1; x<mtx.width()-1; ++x)
-		{
-			//get seed point
-			if(mtx(x,y) >= thresholdUpper)
-			{
-				//check direct neighborhood
-				for(int rx=-1; rx<=1; ++rx)
-				{
-					for(int ry=-1; ry<=1; ++ry)
-					{
-						if(mtx(x+rx, y+ry) >= thresholdLower)
-						{
-							dst(x+rx, y+ry) = 255.;
-						}
-						else
-						{
-							dst(x+rx, y+ry) = 0.;
-						}
-					}
-				}
-			}
-		}
-	}
 }
 
 //simple gamma correction
@@ -744,6 +874,29 @@ template <typename T> void NuLLProcessing::upsample(const Matrix<T>& mtx, Matrix
 	}
 }
 
+//mirror along x axis
+template <typename T> void NuLLProcessing::mirrorX(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	uint width = mtx.width();
+	uint height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = mtx(width-x-1, y);
+}
+
+//mirror along y axis
+template <typename T> void NuLLProcessing::mirrorY(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+	uint width = mtx.width();
+	uint height = mtx.height();
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			dst(x,y) = mtx(x, height-y-1);
+}
+
+//TODO: finish/ implement!
 template <typename T> void NuLLProcessing::statisticalRegionMerging(const Matrix<T>& mtx, Matrix<T>& dst, T threshold)
 {
 	T val, diff;
