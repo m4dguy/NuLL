@@ -61,8 +61,8 @@ template <typename T> void NuLLTools::getRow(const Matrix<T>& src, Vector<T>& ds
 
 template <typename T> void NuLLTools::elementwiseMultiplication(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst)
 {
-	size_t width = mtx.width();
-	size_t height = mtx.height();
+	size_t width = mtx1.width();
+	size_t height = mtx1.height();
 
 	for(uint y=0; y<height; ++y)
 		for(uint x=0; x<width; ++x)
@@ -71,8 +71,8 @@ template <typename T> void NuLLTools::elementwiseMultiplication(const Matrix<T>&
 
 template <typename T> void NuLLTools::elementwiseAddition(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst)
 {
-	size_t width = mtx.width();
-	size_t height = mtx.height();
+	size_t width = mtx1.width();
+	size_t height = mtx1.height();
 
 	for(uint y=0; y<height; ++y)
 		for(uint x=0; x<width; ++x)
@@ -81,41 +81,45 @@ template <typename T> void NuLLTools::elementwiseAddition(const Matrix<T>& mtx1,
 
 template <typename T> void NuLLTools::elementwiseEquals(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst)
 {
-	size_t width = mtx.width();
-	size_t height = mtx.height();
+	size_t width = mtx1.width();
+	size_t height = mtx1.height();
 
 	for(uint y=0; y<height; ++y)
 		for(uint x=0; x<width; ++x)
 			dst(x,y) = (mtx1(x,y) == mtx2(x,y));
 }
 
-template <typename T> T NuLLTools::maxValue(const Matrix<T>& mtx)
+template <typename T> std::pair<T,T> NuLLTools::minMaxValue(const Matrix<T>& mtx)
 {
-	T maxV = mtx(0,0);
+	T minV, maxV;
+	maxV = minV = mtx(0,0);
 	size_t width = mtx.width();
 	size_t height = mtx.height();
 
 	for(uint y=0; y<height; ++y)
+	{
 		for(uint x=0; x<width; ++x)
+		{
+			minV = min(minV, mtx(x,y));
 			maxV = max(maxV, mtx(x,y));
+		}
+	}
 
-	return maxV;
+
+	return std::make_pair(minV, maxV);
+}
+
+template <typename T> T NuLLTools::maxValue(const Matrix<T>& mtx)
+{
+	return minMaxValue(mtx).second;
 }
 
 template <typename T> T NuLLTools::minValue(const Matrix<T>& mtx)
 {
-	T minV = mtx(0,0);
-	size_t width = mtx.width();
-	size_t height = mtx.height();
-
-	for(uint y=0; y<height; ++y)
-		for(uint x=0; x<width; ++x)
-			minV = min(minV, mtx(x,y));
-
-	return minV;
+	return minMaxValue(mtx).first;
 }
 
-template <typename T> T NuLLTools::average(const Matrix<T>& mtx)
+template <typename T> T NuLLTools::mean(const Matrix<T>& mtx)
 {
 	T avg = 0;
 	size_t width = mtx.width();
@@ -125,11 +129,27 @@ template <typename T> T NuLLTools::average(const Matrix<T>& mtx)
 		for(uint x=0; x<width; ++x)
 			avg += mtx(x,y);
 
-	avg /= width * height;
+	avg /= (T)(width * height);
 	return avg;
 }
 
-template <typename T> void NuLLTools::abs(const Matrix<T>& mtx, Matrix<T>& dst)
+template <typename T> T NuLLTools::variance(const Matrix<T>& mtx)
+{
+	T variance = 0;
+	size_t width = mtx.width();
+	size_t height = mtx.height();
+
+	T mean = NuLLTools::mean(mtx);
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			variance += (mtx(x,y) - mean) * (mtx(x,y) - mean);
+
+	variance /= ((width * height)-1);
+	return (T)sqrt((double)variance);
+}
+
+template <typename T> void NuLLTools::mAbs(const Matrix<T>& mtx, Matrix<T>& dst)
 {
 	size_t width = mtx.width();
 	size_t height = mtx.height();
@@ -139,7 +159,7 @@ template <typename T> void NuLLTools::abs(const Matrix<T>& mtx, Matrix<T>& dst)
 			dst(x,y) = (mtx(x,y)>=0)? mtx(x,y) : ((-1)*mtx(x,y));
 }
 
-template <typename T> void NuLLTools::sqrt(const Matrix<T>& mtx, Matrix<T>& dst)
+template <typename T> void NuLLTools::mSqrt(const Matrix<T>& mtx, Matrix<T>& dst)
 {
 	size_t width = mtx.width();
 	size_t height = mtx.height();
@@ -148,5 +168,19 @@ template <typename T> void NuLLTools::sqrt(const Matrix<T>& mtx, Matrix<T>& dst)
 		for(uint x=0; x<width; ++x)
 			dst(x,y) = (T)sqrt((double)mtx(x,y));
 }
+
+template<typename T> void NuLLTools::imageHistogram(const Matrix<T>& src, Vector<T>& dst)
+{
+	size_t width = src.width();
+	size_t height= src.height();
+
+	dst.resize(256);
+	dst.fill(0);
+
+	for(uint y=0; y<height; ++y)
+		for(uint x=0; x<width; ++x)
+			++dst[(uint)src(x,y)];
+}
+
 
 #endif

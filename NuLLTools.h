@@ -23,12 +23,18 @@ namespace NuLLTools
 	template <typename T> void elementwiseAddition(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst);
 	template <typename T> void elementwiseEquals(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst);
 
-	//utility
+	//statistics
+	template <typename T> std::pair<T,T> minMaxValue(const Matrix<T>& mtx);
 	template <typename T> T maxValue(const Matrix<T>& mtx);
 	template <typename T> T minValue(const Matrix<T>& mtx);
-	template <typename T> T average(const Matrix<T>& mtx);
-	template <typename T> void abs(const Matrix<T>& mtx, Matrix<T>& dst);
-	template <typename T> void sqrt(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> T mean(const Matrix<T>& mtx);
+	template <typename T> T variance(const Matrix<T>& mtx);
+
+	//utility
+	template <typename T> void mAbs(const Matrix<T>& mtx, Matrix<T>& dst);
+	template <typename T> void mSqrt(const Matrix<T>& mtx, Matrix<T>& dst);
+
+	template<typename T> void imageHistogram(const Matrix<T>& src, Vector<T>& dst);
 }
 
 #endif // NULLTOOLS_H

@@ -11,7 +11,7 @@
 template <typename T> class Matrix
 {
 	public:
-		Matrix(size_t dimension)
+		Matrix(const size_t dimension=512)
         {
             this->_width = this->_height = dimension;
 
@@ -25,7 +25,7 @@ template <typename T> class Matrix
         };
 
 
-        Matrix(size_t width, size_t height)
+        Matrix(const size_t width, const size_t height)
         {
             this->_width = width;
             this->_height = height;
@@ -111,7 +111,7 @@ template <typename T> class Matrix
 					get(x,y) = val;
 		};
 
-        void resize(size_t width, size_t height)
+        void resize(const size_t width, const size_t height)
         {
             this->_width = width;
             this->_height = height;
@@ -124,6 +124,15 @@ template <typename T> class Matrix
 			this->_memory = trueSize * height * sizeof(T);
 			this->_entries = (T*) realloc(_entries, trueSize * this->_height * sizeof(T));
         };
+
+		void swap(Matrix& other)
+		{
+			std::swap(_width, other._width);
+			std::swap(_height, other._height);
+			std::swap(_power, other._power);
+			std::swap(_memory, other._memory);
+			std::swap(_entries, other._entries);
+		};
 
         inline T& operator()(size_t x, size_t y)
         {
@@ -194,8 +203,8 @@ template <typename T> class Matrix
         Matrix<T> operator*(const Matrix<T>& mtx)
         {
             T entry;
-            size_t width = mtx.width();
-            size_t height = mtx.height();
+            const size_t width = mtx.width();
+           const  size_t height = mtx.height();
             Matrix<T> res(width, height);
 
             for(uint j=0; j<height; ++j)
@@ -244,8 +253,8 @@ template <typename T> class Matrix
         Matrix<T>& operator*=(const Matrix<T>& A)
         {
             T entry;
-            size_t w = A.width();
-            size_t h = A.height();
+            const size_t w = A.width();
+            const size_t h = A.height();
             Vector<T> row(w);
 
             for(uint y=0; y<h; ++y)
@@ -280,12 +289,12 @@ template <typename T> class Matrix
 			if((other._width != this->_width) && (other._height != this->_height))
 				return 0;
 
-			bool eq = 1;
 			for(uint x=0; x<_width; ++x)
 				for(uint y=0; y<_height; ++y)
-					eq &= (other.get(x,y) == get(x,y));
+					if(other.get(x,y) != get(x,y))
+						return false;
 
-		return eq;
+			return true;
 		};
 
 		bool operator!=(const Matrix<T>& other) const
