@@ -204,7 +204,7 @@ template <typename T> class Matrix
         {
             T entry;
             const size_t width = mtx.width();
-           const  size_t height = mtx.height();
+            const size_t height = mtx.height();
             Matrix<T> res(width, height);
 
             for(uint j=0; j<height; ++j)

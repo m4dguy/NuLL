@@ -172,32 +172,42 @@ template <typename T> void NuLLSolve::ThomasAlgorithm(const Matrix<T>& A, const 
     }
 }
 
-template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T> A, const Vector<T>& b, Vector<T>& res, T threshold = 0.00001)
+template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T> A, const Vector<T>& b, Vector<T>& res, const T threshold)
 {
     uint dim = A.height();
     T len, lenOld, diff;
-    Vector<T> vec(dim);
+    Vector<T> xn(dim);
+    Vector<T> tmp(dim);
+    Vector<T> b_(dim);
     Matrix<T> D(dim, dim);
     Matrix<T> R(dim, dim);
 
-    NuLLTools::copyMatrix(A, R);
+    xn = res;
+    b_ = b;
+    A = R;
+    //NuLLTools::copyMatrix(A, R);
     for(uint i=0; i<dim; ++i)
     {
         D(i,i) = 1.0 / A(i,i);
         R(i,i) = 0;
     }
 
+    len = NuLLMath::euclideanNorm(xn);
+
     do
     {
+        b_ = b;
         lenOld = len;
-        //vec = R * vec;
-        vec = D * (b - R * vec);
-        len = NuLLMath::euclideanNorm(vec);
+        NuLLTools::MatrixVectorProduct(R, xn, tmp);
+        b_ -= tmp;
+        NuLLTools::MatrixVectorProduct(D, b_, xn);
+
+        len = NuLLMath::euclideanNorm(xn);
         diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
     }
     while(diff > threshold);
 
-    res = vec;
+    res = xn;
 }
 
 #endif

@@ -101,7 +101,7 @@ template <typename T> class Vector
                 _entries[i] += other._entries[i];
 
             return *this;
-        }
+        };
 
         Vector<T>& operator-=(const Vector<T>& other)
         {
@@ -109,19 +109,18 @@ template <typename T> class Vector
                 _entries[i] -= other._entries[i];
 
             return *this;
-        }
+        };
 
         bool operator==(const Vector<T>& other) const
         {
             if(other._dimension != _dimension)
                 return 0;
 
-            bool eq = 1;
+            for(uint i=0; i<_dimension; ++i)
+                if(other[i] != (*this)[i])
+                    return 0;
 
-            for(uint i=0; (eq && i<_dimension); ++i)
-                eq &= (other[i] == (*this)[i]);
-
-            return eq;
+            return 1;
         };
 
         bool operator!=(const Vector<T>& other) const
@@ -134,8 +133,10 @@ template <typename T> class Vector
 
         friend std::ostream& operator<<(std::ostream& stream, const Vector<T>& vec)
         {
-            for(uint i=0; i<vec._dimension; ++i)
-                stream << "[" << vec[i] << "] ";
+            for(uint i=0; i<vec._dimension-1; ++i)
+                stream << vec[i] << ", ";
+
+            stream << vec[vec._dimension-1] << std::endl;
 
             return stream;
         };

@@ -11,12 +11,16 @@ namespace NuLLTools
 {
 	//copying of entries
 	template <typename T, typename U> void copyMatrix(const Matrix<T>& src, Matrix<U>& dst);
-	template <typename T> void getSegment(const Matrix<T>& src, Matrix<T>& dst, int startX=0, int startY=0, int endX=1, int endY=1);
-	template <typename T> void pasteAt(const Matrix<T>& mtx, Matrix<T>& dst, int dstX=0, int dstY=0);
+	template <typename T> void getSegment(const Matrix<T>& src, Matrix<T>& dst, const int startX=0, const int startY=0, const int endX=1, const int endY=1);
+	template <typename T> void pasteAt(const Matrix<T>& mtx, Matrix<T>& dst, const int dstX=0, const int dstY=0);
 
 	//getting rows and columns
-	template <typename T> void getColumn(const Matrix<T>& src, Vector<T>& dst, uint col);
-	template <typename T> void getRow(const Matrix<T>& src, Vector<T>& dst, uint row);
+	template <typename T> void getColumn(const Matrix<T>& src, Vector<T>& dst, const uint col);
+	template <typename T> void getRow(const Matrix<T>& src, Vector<T>& dst, const uint row);
+
+    //Multiplications
+    template <typename T> void MatrixVectorProduct(const Matrix<T>& mtx, const Vector<T>& vec, Vector<T>& dst);
+    template <typename T> void MatrixMatrixProduct(const Matrix<T>& mtx1, const Matrix<T>& mtx2, Matrix<T>& dst);
 
 	//elementwise operations
 	template <typename T> void elementwiseMultiplication(const Matrix<T>& mtx1, const Matrix<T> mtx2, Matrix<T>& dst);
@@ -34,7 +38,6 @@ namespace NuLLTools
 	template <typename T> void mAbs(const Matrix<T>& mtx, Matrix<T>& dst);
 	template <typename T> void mSqrt(const Matrix<T>& mtx, Matrix<T>& dst);
 
-	template<typename T> void imageHistogram(const Matrix<T>& src, Vector<T>& dst);
 }
 
 #endif // NULLTOOLS_H

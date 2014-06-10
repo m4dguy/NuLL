@@ -22,7 +22,7 @@ namespace NuLLSolve
     template <typename T> void conjugateGradient(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res);
     template <typename T> void ThomasAlgorithm(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res);
 
-    template <typename T> void jacobiMethod(const Matrix<T> A, const Vector<T>& b, Vector<T>& res, T threshold = 0.00001);
+    template <typename T> void jacobiMethod(const Matrix<T> A, const Vector<T>& b, Vector<T>& res, const T threshold = 0.00001);
 
 }
 
