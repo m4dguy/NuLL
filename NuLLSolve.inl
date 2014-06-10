@@ -176,31 +176,32 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T> A, const Vect
 {
     uint dim = A.height();
     T len, lenOld, diff;
-    Vector<T> xn(dim);
-    Vector<T> tmp(dim);
-    Vector<T> b_(dim);
-    Matrix<T> D(dim, dim);
-    Matrix<T> R(dim, dim);
+    T tmp;
 
+    Vector<T> xn(dim);
+    Vector<T> D(dim);               //diagonal matrix
     xn = res;
-    b_ = b;
-    A = R;
-    //NuLLTools::copyMatrix(A, R);
+
     for(uint i=0; i<dim; ++i)
-    {
-        D(i,i) = 1.0 / A(i,i);
-        R(i,i) = 0;
-    }
+        D[i] = 1.0 / A(i,i);
 
     len = NuLLMath::euclideanNorm(xn);
 
     do
     {
-        b_ = b;
         lenOld = len;
-        NuLLTools::MatrixVectorProduct(R, xn, tmp);
-        b_ -= tmp;
-        NuLLTools::MatrixVectorProduct(D, b_, xn);
+        for(uint i=0; i<dim; ++i)
+        {
+            tmp = b[i];
+            for(uint j=0; j<dim; ++j)
+            {
+                if(i==j)
+                    continue;
+
+                tmp -= A(j,i) * xn[j];
+            }
+            xn[i] = D[i] * tmp;
+        }
 
         len = NuLLMath::euclideanNorm(xn);
         diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
