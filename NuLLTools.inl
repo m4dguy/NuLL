@@ -41,13 +41,23 @@ template <typename T> void NuLLTools::pasteAt(const Matrix<T>& mtx, Matrix<T>& d
 			dst(x+dstX, y+dstY) = mtx(x,y);
 }
 
+template <typename T> void NuLLTools::makeVector(Vector<T>& dst, int elements, ...)
+{
+    va_list vars;
+    va_start(vars, elements);
+    dst.resize(elements);
+    for(int i=0; i<elements; ++i)
+        dst[i] = va_arg(vars, T);
+
+    va_end(vars);
+}
+
 //copy matrix column to vector
 template <typename T> void NuLLTools::getColumn(const Matrix<T>& src, Vector<T>& dst, const uint col)
 {
     const size_t dim = src.height();
     for(uint y=0; y<dim; ++y)
         dst[y] = src(col, y);
-
 }
 
 //copy matrix row to vector
