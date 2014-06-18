@@ -15,6 +15,7 @@ namespace NuLLTools
 	template <typename T> void getSegment(const Matrix<T>& src, Matrix<T>& dst, const int startX=0, const int startY=0, const int endX=1, const int endY=1);
 	template <typename T> void pasteAt(const Matrix<T>& mtx, Matrix<T>& dst, const int dstX=0, const int dstY=0);
     template <typename T> void makeVector(Vector<T>& dst, int elements, ...);
+    template <typename T> void makeMatrix(Matrix<T>& dst, int elements, ...);
 
 	//getting rows and columns
 	template <typename T> void getColumn(const Matrix<T>& src, Vector<T>& dst, const uint col);

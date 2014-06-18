@@ -52,6 +52,24 @@ template <typename T> void NuLLTools::makeVector(Vector<T>& dst, int elements, .
     va_end(vars);
 }
 
+template <typename T> void NuLLTools::makeMatrix(Matrix<T>& dst, int elements, ...)
+{
+    va_list vars;
+    va_start(vars, elements);
+
+    int x, y;
+    size_t dim = (size_t) sqrt(elements);
+    dst.resize(dim, dim);
+    for(int i=0; i<elements; ++i)
+    {
+        x = i % dim;
+        y = (i / dim);
+        dst(x,y) = va_arg(vars, T);
+    }
+
+    va_end(vars);
+}
+
 //copy matrix column to vector
 template <typename T> void NuLLTools::getColumn(const Matrix<T>& src, Vector<T>& dst, const uint col)
 {
