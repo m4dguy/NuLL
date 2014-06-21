@@ -172,6 +172,8 @@ template <typename T> void NuLLSolve::ThomasAlgorithm(const Matrix<T>& A, const 
     }
 }
 
+//calculation of equation systems
+//might get trapped in local minimum
 template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
 {
     size_t dim = A.height();
@@ -205,6 +207,9 @@ template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const 
     res = uk;
 }
 
+//solves systems for diagonally dominant matrices
+//based on matrix splitting
+//iterative approach with fast iteration steps
 template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
 {
     const size_t dim = A.height();
@@ -246,11 +251,49 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vec
     res = xn;
 }
 
+//iteratively solves linear systems
+//based on matrix splitting
+//fast than jacobi method
 template <typename T> void NuLLSolve::gaussSeidelMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
 {
+    const size_t dim = A.height();
+    T len, lenOld, diff;
+    T tmp;
+
+    Vector<T> xn(dim);
+    Vector<T> xnp(dim);
+    Vector<T> invA(dim);               //diagonal matrix
+    xn = xnp = res;
+
+    for(uint i=0; i<dim; ++i)
+        invA[i] = 1.0 / A(i,i);
+
+    len = NuLLMath::euclideanNorm(xn);
+
+    do
+    {
+        lenOld = len;
+        xn = xnp;
+
+        for(uint y=0; y<dim; ++y)
+        {
+            tmp = 0;
+            for(uint x=0; x<y; ++x)
+                tmp += A(x,y) * xn[x];
+
+            for(uint x=y+1; x<dim; ++x)
+                tmp += A(x,y) * xn[x];
 
 
+            xnp[y] = invA[y] * (b[y] - tmp);
+        }
 
+        len = NuLLMath::euclideanNorm(xnp);
+        diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
+    }
+    while(diff > threshold);
+
+    res = xn;
 }
 
 #endif
