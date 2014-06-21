@@ -100,14 +100,14 @@ template <typename T> void NuLLSolve::conjugateGradient(const Matrix<T>& A, cons
     Vector<T> pk(dim);
     Vector<T> x0(dim);
 
-    rk = A * x0;
+    NuLLTools::MatrixVectorProduct(A, x0, rk);
 
     for(uint i=0; i<dim; ++i)
-        pk[i] = rk[i] = b[i] - rk[i];
+        pk[i] = rk[i] = (b[i] - rk[i]);
 
     for(uint k=0; k<dim; ++k)
     {
-        Apk = A * pk;
+        NuLLTools::MatrixVectorProduct(A, pk, Apk);
         gamma = NuLLMath::dotProduct(pk, Apk);
 
         //check for convergence
@@ -172,43 +172,85 @@ template <typename T> void NuLLSolve::ThomasAlgorithm(const Matrix<T>& A, const 
     }
 }
 
-template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T> A, const Vector<T>& b, Vector<T>& res, const T threshold)
+template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
 {
-    uint dim = A.height();
+    size_t dim = A.height();
+    Vector<T> uk(dim);
+    Vector<T> xk(dim);
+    Vector<T> rk(dim);
+    T tau, div;
+
+    NuLLTools::MatrixVectorProduct(A, res, rk);
+    rk -= b;
+
+    do
+    {
+        NuLLTools::MatrixVectorProduct(A, rk, uk);
+        tau  = NuLLMath::dotProduct(rk, rk);
+        div  = NuLLMath::dotProduct(uk, rk);
+
+        if(!div)
+            break;
+
+        tau /= div;
+
+        xk *= tau;
+        rk *= tau;
+
+        xk -= rk;
+        rk -= uk;
+    }
+    while(tau > threshold);
+
+    res = uk;
+}
+
+template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
+{
+    const size_t dim = A.height();
     T len, lenOld, diff;
     T tmp;
 
     Vector<T> xn(dim);
-    Vector<T> D(dim);               //diagonal matrix
-    xn = res;
+    Vector<T> xnp(dim);
+    Vector<T> invA(dim);               //diagonal matrix
+    xn = xnp = res;
 
     for(uint i=0; i<dim; ++i)
-        D[i] = 1.0 / A(i,i);
+        invA[i] = 1.0 / A(i,i);
 
     len = NuLLMath::euclideanNorm(xn);
 
     do
     {
         lenOld = len;
-        for(uint i=0; i<dim; ++i)
-        {
-            tmp = b[i];
-            for(uint j=0; j<dim; ++j)
-            {
-                if(i==j)
-                    continue;
+        xn = xnp;
 
-                tmp -= A(j,i) * xn[j];
-            }
-            xn[i] = D[i] * tmp;
+        for(uint y=0; y<dim; ++y)
+        {
+            tmp = 0;
+            for(uint x=0; x<y; ++x)
+                tmp += A(x,y) * xnp[x];
+
+            for(uint x=y+1; x<dim; ++x)
+                tmp += A(x,y) * xn[x];
+
+            xnp[y] = invA[y] * (b[y] - tmp);
         }
 
-        len = NuLLMath::euclideanNorm(xn);
+        len = NuLLMath::euclideanNorm(xnp);
         diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
     }
     while(diff > threshold);
 
     res = xn;
+}
+
+template <typename T> void NuLLSolve::gaussSeidelMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
+{
+
+
+
 }
 
 #endif
