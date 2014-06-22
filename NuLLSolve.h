@@ -26,9 +26,10 @@ namespace NuLLSolve
     template <typename T> void ThomasAlgorithm(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res);
 
     //iterative solvers
-    template <typename T> void gradientDescent(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold = 0.00001);
-    template <typename T> void jacobiMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold = 0.00001);
-    template <typename T> void gaussSeidelMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold = 0.00001);
+    template <typename T> void gradientDescent(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const uint iterations = 100, const T threshold = 0.00001);
+    template <typename T> void jacobiMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const uint iterations = 100, const T threshold = 0.00001);
+    template <typename T> void gaussSeidelMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const uint iterations = 100, const T threshold = 0.00001);
+    template <typename T> void gaussSeidelSOR(const Matrix<T>& A, const Vector<T>&b, Vector<T>& res, const T omega = 1., const uint iterations = 100, const T threshold = 0.00001);
 }
 
 #endif // NULLSOLVE_H

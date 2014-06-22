@@ -174,8 +174,9 @@ template <typename T> void NuLLSolve::ThomasAlgorithm(const Matrix<T>& A, const 
 
 //calculation of equation systems
 //might get trapped in local minimum
-template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
+template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const uint iterations, const T threshold)
 {
+    uint i = 0;
     size_t dim = A.height();
     Vector<T> uk(dim);
     Vector<T> xk(dim);
@@ -187,6 +188,7 @@ template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const 
 
     do
     {
+        ++i;
         NuLLTools::MatrixVectorProduct(A, rk, uk);
         tau  = NuLLMath::dotProduct(rk, rk);
         div  = NuLLMath::dotProduct(uk, rk);
@@ -202,7 +204,7 @@ template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const 
         xk -= rk;
         rk -= uk;
     }
-    while(tau > threshold);
+    while((tau > threshold) && (i<iterations));
 
     res = uk;
 }
@@ -210,8 +212,9 @@ template <typename T> void NuLLSolve::gradientDescent(const Matrix<T>& A, const 
 //solves systems for diagonally dominant matrices
 //based on matrix splitting
 //iterative approach with fast iteration steps
-template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
+template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const uint iterations, const T threshold)
 {
+    uint i = 0;
     const size_t dim = A.height();
     T len, lenOld, diff;
     T tmp;
@@ -226,8 +229,10 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vec
 
     len = NuLLMath::euclideanNorm(xn);
 
+
     do
     {
+        ++i;
         lenOld = len;
         xn = xnp;
 
@@ -246,7 +251,7 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vec
         len = NuLLMath::euclideanNorm(xnp);
         diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
     }
-    while(diff > threshold);
+    while((diff > threshold) && (i<iterations));
 
     res = xn;
 }
@@ -254,8 +259,9 @@ template <typename T> void NuLLSolve::jacobiMethod(const Matrix<T>& A, const Vec
 //iteratively solves linear systems
 //based on matrix splitting
 //fast than jacobi method
-template <typename T> void NuLLSolve::gaussSeidelMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const T threshold)
+template <typename T> void NuLLSolve::gaussSeidelMethod(const Matrix<T>& A, const Vector<T>& b, Vector<T>& res, const uint iterations, const T threshold)
 {
+    uint i = 0;
     const size_t dim = A.height();
     T len, lenOld, diff;
     T tmp;
@@ -272,6 +278,7 @@ template <typename T> void NuLLSolve::gaussSeidelMethod(const Matrix<T>& A, cons
 
     do
     {
+        ++i;
         lenOld = len;
         xn = xnp;
 
@@ -284,16 +291,60 @@ template <typename T> void NuLLSolve::gaussSeidelMethod(const Matrix<T>& A, cons
             for(uint x=y+1; x<dim; ++x)
                 tmp += A(x,y) * xn[x];
 
-
             xnp[y] = invA[y] * (b[y] - tmp);
         }
 
         len = NuLLMath::euclideanNorm(xnp);
         diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
     }
-    while(diff > threshold);
+    while((diff > threshold) && (i<iterations));
 
-    res = xn;
+    res = xnp;
+}
+
+template <typename T> void NuLLSolve::gaussSeidelSOR(const Matrix<T>& A, const Vector<T>&b, Vector<T>& res, const T omega, const uint iterations = 100, const T threshold = 0.00001)
+{
+    uint i = 0;
+    const size_t dim = A.height();
+    const T omegaM = 1. - omega;
+    T len, lenOld, diff;
+    T tmp;
+
+    Vector<T> xn(dim);
+    Vector<T> xnp(dim);
+    Vector<T> invA(dim);               //diagonal matrix
+    xn = xnp = res;
+
+    for(uint i=0; i<dim; ++i)
+        invA[i] = omega / A(i,i);
+
+    len = NuLLMath::euclideanNorm(xn);
+
+    do
+    {
+        ++i;
+        lenOld = len;
+        xn = xnp;
+
+        for(uint y=0; y<dim; ++y)
+        {
+            tmp = 0;
+            for(uint x=0; x<y; ++x)
+                tmp += A(x,y) * xn[x];
+
+            for(uint x=y+1; x<dim; ++x)
+                tmp += A(x,y) * xn[x];
+
+            xnp[y] = invA[y] * (b[y] - tmp);
+            xnp[y] += omegaM * xn[y];
+        }
+
+        len = NuLLMath::euclideanNorm(xnp);
+        diff = (len > lenOld)? (len - lenOld) : (lenOld - len);
+    }
+    while((diff > threshold) && (i<iterations));
+
+    res = xnp;
 }
 
 #endif
