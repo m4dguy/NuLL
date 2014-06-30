@@ -8,12 +8,14 @@ template<typename T> inline void NuLLEigen::powerIteration(const Matrix<T>& mtx,
 {
     size_t dim = mtx.height();
     T lenOld, diff;
+    Vector<T> tmp(dim);
     dstVec[0] = 1;  //init; unnecessary?
 
     do
     {
-        dstVec = mtx * dstVec;
         lenOld = dstVal;
+        NuLLTools::MatrixVectorProduct(mtx, dstVec, tmp);
+        tmp.swap(dstVec);
         dstVal = NuLLMath::euclideanNorm(dstVec);
 
         dstVec /= dstVal;

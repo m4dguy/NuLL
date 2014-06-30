@@ -212,6 +212,17 @@ template <typename T> T NuLLTools::variance(const Matrix<T>& mtx)
 	return (T)sqrt((double)variance);
 }
 
+template <typename T> void NuLLTools::normalize(Vector<T>& vec)
+{
+    const size_t dim = vec.size();
+    T scale = 0;
+
+    for(uint i=0; i<dim; ++i)
+        scale += vec[i];
+
+    vec /= scale;
+}
+
 template <typename T> void NuLLTools::mAbs(const Matrix<T>& mtx, Matrix<T>& dst)
 {
 	const size_t width = mtx.width();

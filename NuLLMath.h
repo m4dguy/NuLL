@@ -19,6 +19,7 @@ namespace NuLLMath
     const double pi = 2.0 * asinf(1.0);
     const double e  = 2.7182818284590452353602874713526624977572470936999595;
 
+    template <typename T> T trace(const Matrix<T>& mtx);
     template <typename T> void transpose(const Matrix<T>& mtx, Matrix<T>& dst);
 
     template <typename T> T determinant(const Matrix<T>& mtx);

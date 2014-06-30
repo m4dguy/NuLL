@@ -38,6 +38,7 @@ namespace NuLLTools
 	template <typename T> T variance(const Matrix<T>& mtx);
 
 	//utility
+	template <typename T> void normalize(Vector<T>& vec);
 	template <typename T> void mAbs(const Matrix<T>& mtx, Matrix<T>& dst);
 	template <typename T> void mSqrt(const Matrix<T>& mtx, Matrix<T>& dst);
 

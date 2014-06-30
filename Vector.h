@@ -48,6 +48,12 @@ template <typename T> class Vector
 				T* _entries  = (T*) realloc(_entries, dimension * sizeof(T));
         };
 
+        void swap(Vector& other)
+		{
+			std::swap(_dimension, other._dimension);
+			std::swap(_entries, other._entries);
+		};
+
         Vector& operator=(const Vector& other)
         {
             if(this == &other)   // handle self assignment

@@ -3,6 +3,17 @@
 
 #include "NuLLMath.h"
 
+template <typename T> T NuLLMath::trace(const Matrix<T>& mtx)
+{
+    size_t width = mtx.width();
+    T res = 0;
+
+    for(uint i=0; i<width; ++i)
+        res += mtx(i,i);
+
+    return res;
+}
+
 //transpose matrix
 template <typename T> void NuLLMath::transpose(const Matrix<T>& mtx, Matrix<T>& dst)
 {
