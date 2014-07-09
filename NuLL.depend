@@ -1,0 +1,114 @@
+# depslib dependency file v1.0
+1403543697 source:c:\users\m4dguy\desktop\projekte\null\main.cpp
+	"Matrix.h"
+	"Vector.h"
+	"Utils.h"
+	"TestCases.h"
+
+1382261520 c:\users\m4dguy\desktop\projekte\null\symmatrix.h
+	<algorithm>
+	"RectMatrix.h"
+
+1402502255 c:\users\m4dguy\desktop\projekte\null\matrix.h
+	"Utils.h"
+	"Vector.h"
+
+1371732343 c:\users\m4dguy\desktop\projekte\null\utils.h
+	<iostream>
+	<stdlib.h>
+
+1380453301 c:\users\m4dguy\desktop\projekte\null\quadmatrix.h
+	"Matrix.h"
+
+1389143697 c:\users\m4dguy\desktop\projekte\null\nullmath.h
+	"Utils.h"
+	"NuLLDecomposition.inl"
+	"NuLLSolve.inl"
+	"Matrix.h"
+	"Vector.h"
+
+1362262059 c:\users\m4dguy\desktop\projekte\null\diagmatrix.h
+	"Matrix.h"
+
+1389143631 c:\users\m4dguy\desktop\projekte\null\nulldecomposition.h
+	<math.h>
+	"Utils.h"
+	"NuLLMath.inl"
+	"NuLLTools.inl"
+	"Vector.h"
+	"Matrix.h"
+
+1403432830 c:\users\m4dguy\desktop\projekte\null\nullsolve.h
+	"Vector.h"
+	"NuLLDecomposition.inl"
+	"NuLLTools.inl"
+
+1389143586 c:\users\m4dguy\desktop\projekte\null\nulleigen.h
+	"Vector.h"
+	"NuLLDecomposition.h"
+
+1399662712 c:\users\m4dguy\desktop\projekte\null\nullprocessing.h
+	<algorithm>
+	<vector>
+	<math.h>
+	"NuLLTools.inl"
+
+1389143858 c:\users\m4dguy\desktop\projekte\null\nullmath.inl
+	"NuLLMath.h"
+
+1403543830 c:\users\m4dguy\desktop\projekte\null\nulleigen.inl
+	"NuLLEigen.h"
+
+1399662920 c:\users\m4dguy\desktop\projekte\null\nullprocessing.inl
+	"NuLLProcessing.h"
+
+1389143678 c:\users\m4dguy\desktop\projekte\null\nulldecomposition.inl
+	"NuLLDecomposition.h"
+
+1403434706 c:\users\m4dguy\desktop\projekte\null\nullsolve.inl
+	"NuLLSolve.h"
+
+1403543641 c:\users\m4dguy\desktop\projekte\null\vector.h
+	<string.h>
+	"Utils.h"
+
+1403216376 c:\users\m4dguy\desktop\projekte\null\nulltools.inl
+	"NuLLTools.h"
+
+1403108232 c:\users\m4dguy\desktop\projekte\null\nulltools.h
+	<math.h>
+	<stdarg.h>
+	"Utils.h"
+	"Vector.h"
+	"Matrix.h"
+
+1371644380 c:\users\m4dguy\desktop\projekte\null\testcases.cpp
+	"SymMatrix.h"
+	"QuadMatrix.h"
+	"NuLLMath.inl"
+	"NuLLEigen.inl"
+	"NuLLDecomposition.inl"
+	"NuLLSolve.inl"
+	"NuLLProcessing.inl"
+	"NuLLTools.inl"
+	"Vector.h"
+	"Utils.h"
+
+1389144924 c:\users\m4dguy\desktop\projekte\null\testcases.h
+	"Matrix.h"
+	"NuLLMath.inl"
+	"NuLLEigen.inl"
+	"NuLLDecomposition.inl"
+	"NuLLSolve.inl"
+	"NuLLProcessing.inl"
+	"NuLLTools.inl"
+	"Vector.h"
+	"Utils.h"
+	<assert.h>
+
+1380398560 c:\users\m4dguy\desktop\projekte\null\rectmatrix.h
+	"Matrix.h"
+
+1382268084 c:\users\m4dguy\desktop\projekte\null\powermatrix.h
+	"Matrix.h"
+

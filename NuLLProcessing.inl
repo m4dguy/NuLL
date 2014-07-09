@@ -184,13 +184,13 @@ template <typename T> void NuLLProcessing::gaussianKernel(Matrix<T>& dst, int ra
 
 //smoothing with pillbox kernel
 //uses separation theorem for fast convolution/ linear running time
-template <typename T> void NuLLProcessing::pillboxBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
+template <typename T> void NuLLProcessing::boxBlur(const Matrix<T>& mtx, Matrix<T>& dst, int radius)
 {
 	uint kSize = (2 * radius) + 1;
 	Vector<T> kernel(kSize);
 	kernel.fill(1.);
 	kernel /= (T)kSize;
-	
+
 	convolve(mtx, dst, kernel);
 }
 
@@ -217,7 +217,7 @@ template <typename T> void NuLLProcessing::gaussianBlur(const Matrix<T>& mtx, Ma
 		scale += res;
 	}
 	kernel /= (T)scale;
-	
+
 	convolve(mtx, dst, kernel);
 }
 
@@ -301,16 +301,38 @@ template <typename T> void NuLLProcessing::secondDerivative(const Matrix<T>& mtx
     }
 }
 
+template <typename T> void NuLLProcessing::laplacian(const Matrix<T>& mtx, Matrix<T>& dst)
+{
+    uint  width = mtx.width();
+	uint height = mtx.height();
+
+	Matrix<T> dxx(width, height);
+	Matrix<T> dyy(width, height);
+
+	Vector<T> stencil(3);
+	stencil[0] = 1;
+	stencil[1] = -2;
+	stencil[2] = 1;
+
+	convolveX(mtx, dxx, stencil);
+	convolveY(mtx, dyy, stencil);
+
+    for(uint y=0; y<height; ++y)
+        for(uint x=0; x<width; ++x)
+            dst(x,y) = dxx(x,y) + dyy(x,y);
+}
+
 //distance transform
+//uses fast scheme vy boomgaard
 //use on binary images with values: 0, 255
 template <typename T> void NuLLProcessing::distanceTransform(const Matrix<T>& mtx, Matrix<T>& dst)
 {
 	uint  width = mtx.width();
 	uint height = mtx.height();
-	
+
 	//max distance
 	const T inf = (width * width + height * height);
-	
+
 	uint in;						//point with distance information
 	T val, valMin;					//calculated distance
 
@@ -322,7 +344,7 @@ template <typename T> void NuLLProcessing::distanceTransform(const Matrix<T>& mt
 	{
 		for(uint x=0; x<width; ++x)
 		{
-			if(mtx(x,y) == 255)
+			if(mtx(x,y))
 				tmp(x,y) = 0;
 			else
 				tmp(x,y) = inf;
@@ -332,6 +354,8 @@ template <typename T> void NuLLProcessing::distanceTransform(const Matrix<T>& mt
 	//transform in x direction
 	for(uint y=0; y<height; ++y)
 	{
+		res(0,y) = inf;
+
 		//forward direction
 		for(uint x=1; x<width; ++x)
 		{
@@ -356,7 +380,7 @@ template <typename T> void NuLLProcessing::distanceTransform(const Matrix<T>& mt
 				res(x,y) = valMin;
 			}
 		}
-		
+
 		//backward direction
 		for(int x=width-2; x>=0; --x)
 		{
@@ -434,7 +458,7 @@ template <typename T> void NuLLProcessing::distanceTransform(const Matrix<T>& mt
 			}
 		}
 	}
-	dst = tmp;
+	dst.swap(tmp);
 }
 
 //result similar to derivative filter

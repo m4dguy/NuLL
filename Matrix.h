@@ -55,12 +55,12 @@ template <typename T> class Matrix
             free(_entries);
         };
 
-        inline T& get(size_t x, size_t y)
+        inline T& get(const size_t x, const size_t y)
         {
             return _entries[(y << _power) | x];
         };
 
-        inline const T& get(size_t x, size_t y) const
+        inline const T& get(const size_t x, const size_t y) const
         {
             return _entries[(y << _power) | x];
         };
@@ -70,10 +70,12 @@ template <typename T> class Matrix
 			int w = _width;
 			int h = _height;
 
-			x = abs(x);
-            y = abs(y);
-            x = (x>=w)? (w - (x - w) - 1) : x;
-            y = (y>=h)? (h - (y - h) - 1) : y;
+			x = (x<0)? abs(x)-1 : x;
+			y = (y<0)? abs(y)-1 : y;
+            //x = (x>=w)? (w - (x - w) - 1) : x;
+            //y = (y>=h)? (h - (y - h) - 1) : y;
+            x = (x>=w)? x - (x % (w-1)) : x;
+			y = (y>=h)? y - (y % (h-1)) : y;
             return get(x,y);
         };
 
@@ -82,14 +84,21 @@ template <typename T> class Matrix
 			int w = _width;
 			int h = _height;
 
-			x = abs(x);
-            y = abs(y);
-            x = (x>=w)? (w - (x - w) - 1) : x;
-            y = (y>=h)? (h - (y - h) - 1) : y;
-            return get(x,y);
+			x = (x<0)? abs(x)-1 : x;
+			y = (y<0)? abs(y)-1 : y;
+            //x = (x>=w)? (w - (x - w) - 1) : x;
+            //y = (y>=h)? (h - (y - h) - 1) : y;
+            x = (x>=w)? x - (x % (w-1)) : x;
+			y = (y>=h)? y - (y % (h-1)) : y;
+			return get(x,y);
         };
 
-        inline void set(size_t x, size_t y, T& val)
+		inline T* getRow(const size_t y)
+		{
+			return _entries + (y << _power);
+		};
+
+        inline void set(const size_t x, const size_t y, T& val)
         {
             (*this)(x,y) = val;
         };
@@ -204,7 +213,7 @@ template <typename T> class Matrix
         {
             T entry;
             const size_t width = mtx.width();
-            const size_t height = mtx.height();
+           const  size_t height = mtx.height();
             Matrix<T> res(width, height);
 
             for(uint j=0; j<height; ++j)
