@@ -1,19 +1,33 @@
 #include "FLTKInterface.h"
 
-//assume buffer depth = 3
-//fix for case of depth = 1
-//assuming pixel buffer (called dst) exists
-template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& src, uchar* dst)
+template<typename T> void FLTKInterface::matrixToImage(const Matrix<T>& src, Fl_RGB_Image* dst)
 {
-	//assume depth = 3
 	uint index;				//buffer index
-	const uint depth = 3;
 	const size_t height = src.height();
 	const size_t width = src.width();
-	
-	//free(dst);
-	//size_t requiredSize = depth * width * height * sizeof(uchar);
-	//dst = new uchar[requiredSize];
+
+	const int depth = 3;
+	uchar* data = (uchar*) dst->array;
+
+	for(uint y=0; y<height; ++y)
+	{
+		for(uint x=0; x<width; ++x)
+		{
+			index = (y * width * depth) + (x * depth);
+			data[index] = (uchar) src(x,y);
+			data[index+1] = (uchar) src(x,y);
+			data[index+2] = (uchar) src(x,y);
+		}
+	}
+}
+
+//fix for case of depth = 1
+//assuming pixel buffer (called dst) exists
+template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& src, uchar* dst, const int depth)
+{
+	uint index;				//buffer index
+	const size_t height = src.height();
+	const size_t width = src.width();
 
 	for(uint y=0; y<height; ++y)
 	{
@@ -21,8 +35,12 @@ template<typename T> void FLTKInterface::matrixToPixelbuffer(const Matrix<T>& sr
 		{
 			index = (y * width * depth) + (x * depth);
 			dst[index] = (uchar) src(x,y);
-			dst[index+1] = (uchar) src(x,y);
-			dst[index+2] = (uchar) src(x,y);
+
+			if(depth == 3)
+			{
+				dst[index+1] = (uchar) src(x,y);
+				dst[index+2] = (uchar) src(x,y);
+			}
 		}
 	}
 }
@@ -64,7 +82,7 @@ template<typename T> void FLTKInterface::pixelbufferToMatrix(const uchar* src, M
 		for(uint x=0; x<width; ++x)
 		{
 			index = (y * width + x) * depth;
-			val = (T)((src[index] + src[index+1] + src[index+2]) / 3.0);
+			val = (T)(src[index] + src[index+1] + src[index+2]) / (T)3.0;
 			dst(x,y) = val;
 		}
 	}
