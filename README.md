@@ -8,7 +8,5 @@ TODO:
 
 *matrix inversion incomplete
 
-*more reliable algorithm for LU decomposition required
-
 *bug in thomas algorithm
 
